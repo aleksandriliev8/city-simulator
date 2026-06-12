@@ -1,0 +1,29 @@
+# Visual Studio
+.vs/
+
+# Per-user
+*.user
+
+# Build output
+Debug/
+Release/
+x64/
+x86/
+
+# Compilation object types
+*.obj
+
+# Compilation files
+*.exe
+
+# Debug symbols
+*.pdb
+
+# Incremental linker
+*.ilk
+
+# Runtime generated data
+data/*
+
+# Keep the history in the repo
+!data/.gitkeep
