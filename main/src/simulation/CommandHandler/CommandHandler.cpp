@@ -180,23 +180,222 @@ void CommandHandler::handleStep(int days) {
 }
 
 void CommandHandler::handleInfo() {
-    // TODO: Paginator
+    if (!simulation.hasCity()) {
+        std::cout << "Error: no active simulation" << std::endl;
+        return;
+    }
+
+    City* city = simulation.getCity();
+    Paginator paginator;
+
+    for (int i = 0; i < city->getRows(); i++) {
+        for (int j = 0; j < city->getCols(); j++) {
+            paginator.addLine("Location " + std::to_string(i) + " " + std::to_string(j) + ":");
+            Building* building = city->getBuilding(i, j);
+            if (building == nullptr) {
+                paginator.addLine("    Empty");
+                continue;
+            }
+            paginator.addLine("    " + building->getType() + ":");
+            for (int k = 0; k < building->getResidentCount(); k++) {
+                Resident* resident = building->getResidents()[k];
+                paginator.addLine("        " + resident->getName());
+                paginator.addLine("            Profession: " + resident->getProfession()->getName());
+                paginator.addLine("            Happiness:  " + std::to_string(resident->getHappiness()));
+                paginator.addLine("            Money:      " + std::to_string(resident->getMoney()));
+                paginator.addLine("            Life:       " + std::to_string(resident->getLife()));
+            }
+        }
+    }
+
+    paginator.display();
 }
 
 void CommandHandler::handleInfo(int row, int col) {
-    // TODO: Paginator
+    if (!simulation.hasCity()) {
+        std::cout << "Error: no active simulation" << std::endl;
+        return;
+    }
+
+    City* city = simulation.getCity();
+
+    if (!city->isValidPosition(row, col)) {
+        std::cout << "Error: invalid position" << std::endl;
+        return;
+    }
+
+    Building* building = city->getBuilding(row, col);
+    if (building == nullptr) {
+        std::cout << "Location (" << row << ", " << col << ") is empty" << std::endl;
+        return;
+    }
+
+    Paginator paginator;
+    paginator.addLine("Type:        " + building->getType());
+    paginator.addLine("Rent:        " + std::to_string((int)building->getRent(city->getRows(), city->getCols())) + " EUR");
+    paginator.addLine("Capacity:    " + std::to_string(building->getCapacity()));
+    paginator.addLine("Free slots:  " + std::to_string(building->getFreeSlots()));
+    paginator.addLine("Residents:");
+    for (int k = 0; k < building->getResidentCount(); k++) {
+        paginator.addLine("    " + building->getResidents()[k]->getName());
+    }
+    paginator.display();
 }
 
 void CommandHandler::handleInfo(int row, int col, const std::string& name) {
-    // TODO: Paginator
+    if (!simulation.hasCity()) {
+        std::cout << "Error: no active simulation" << std::endl;
+        return;
+    }
+
+    City* city = simulation.getCity();
+
+    if (!city->isValidPosition(row, col)) {
+        std::cout << "Error: invalid position" << std::endl;
+        return;
+    }
+
+    Building* building = city->getBuilding(row, col);
+    if (building == nullptr) {
+        std::cout << "Error: no building at (" << row << ", " << col << ")" << std::endl;
+        return;
+    }
+
+    Resident* resident = building->getResident(name);
+    if (resident == nullptr) {
+        std::cout << "Error: resident " << name << " not found" << std::endl;
+        return;
+    }
+
+    Paginator paginator;
+    paginator.addLine("Name:       " + resident->getName());
+    paginator.addLine("Profession: " + resident->getProfession()->getName());
+    paginator.addLine("Happiness:  " + std::to_string(resident->getHappiness()));
+    paginator.addLine("Money:      " + std::to_string(resident->getMoney()));
+    paginator.addLine("Life:       " + std::to_string(resident->getLife()));
+    paginator.addLine("History:");
+    for (int h = 0; h < (int)resident->getHistory().size(); h++) {
+        paginator.addLine("    " + resident->getHistory()[h].toString());
+    }
+    paginator.display();
 }
 
 void CommandHandler::handleStat(const std::string& option) {
-    // TODO: statistics
+    if (!simulation.hasCity()) {
+        std::cout << "Error: no active simulation" << std::endl;
+        return;
+    }
+
+    City* city = simulation.getCity();
+
+    if (option != "happiness" && option != "money" && option != "life" && option != "profession") {
+        std::cout << "Error: invalid option. Use happiness, money, life or profession" << std::endl;
+        return;
+    }
+
+    int total = 0;
+    int min = 101;
+    int max = -1;
+    int count = 0;
+
+    int teachers = 0, programmers = 0, miners = 0, unemployed = 0, students = 0;
+
+    for (int i = 0; i < city->getRows(); i++) {
+        for (int j = 0; j < city->getCols(); j++) {
+            Building* building = city->getBuilding(i, j);
+            if (building == nullptr) continue;
+
+            for (int k = 0; k < building->getResidentCount(); k++) {
+                Resident* resident = building->getResidents()[k];
+                count++;
+
+                int value = 0;
+                if (option == "happiness") value = resident->getHappiness();
+                else if (option == "money")     value = resident->getMoney();
+                else if (option == "life")      value = resident->getLife();
+                else if (option == "profession") {
+                    std::string prof = resident->getProfession()->getName();
+                    if (prof == "Teacher")    teachers++;
+                    else if (prof == "Programmer") programmers++;
+                    else if (prof == "Miner")      miners++;
+                    else if (prof == "Unemployed") unemployed++;
+                    else if (prof == "Student")    students++;
+                    continue;
+                }
+
+                total += value;
+                if (value < min) min = value;
+                if (value > max) max = value;
+            }
+        }
+    }
+
+    Paginator paginator;
+
+    if (option == "profession") {
+        paginator.addLine("Total residents: " + std::to_string(count));
+        paginator.addLine("Teachers:        " + std::to_string(teachers));
+        paginator.addLine("Programmers:     " + std::to_string(programmers));
+        paginator.addLine("Miners:          " + std::to_string(miners));
+        paginator.addLine("Unemployed:      " + std::to_string(unemployed));
+        paginator.addLine("Students:        " + std::to_string(students));
+    }
+    else {
+        if (count == 0) {
+            std::cout << "No residents in simulation" << std::endl;
+            return;
+        }
+        paginator.addLine("Total residents: " + std::to_string(count));
+        paginator.addLine("Average:         " + std::to_string(total / count));
+        paginator.addLine("Min:             " + std::to_string(min));
+        paginator.addLine("Max:             " + std::to_string(max));
+    }
+
+    paginator.display();
 }
 
 void CommandHandler::handleStatBuildings() {
-    // TODO: statistics
+    if (!simulation.hasCity()) {
+        std::cout << "Error: no active simulation" << std::endl;
+        return;
+    }
+
+    City* city = simulation.getCity();
+
+    int modern = 0, panel = 0, dormitory = 0;
+    int central = 0, peripheral = 0, standard = 0;
+
+    double minDim = (double)(city->getRows() < city->getCols() ? city->getRows() : city->getCols());
+    double centerRow = city->getRows() / 2.0;
+    double centerCol = city->getCols() / 2.0;
+
+    for (int i = 0; i < city->getRows(); i++) {
+        for (int j = 0; j < city->getCols(); j++) {
+            Building* building = city->getBuilding(i, j);
+            if (building == nullptr) continue;
+
+            std::string type = building->getType();
+            if (type == "Modern")    modern++;
+            else if (type == "Panel")     panel++;
+            else if (type == "Dormitory") dormitory++;
+
+            double distance = std::sqrt((i - centerRow) * (i - centerRow) + (j - centerCol) * (j - centerCol));
+            if (distance <= minDim / 8.0)          central++;
+            else if (distance > 6.0 * minDim / 8.0) peripheral++;
+            else                                     standard++;
+        }
+    }
+
+    Paginator paginator;
+    paginator.addLine("--- By type ---");
+    paginator.addLine("Modern:     " + std::to_string(modern));
+    paginator.addLine("Panel:      " + std::to_string(panel));
+    paginator.addLine("Dormitory:  " + std::to_string(dormitory));
+    paginator.addLine("--- By location ---");
+    paginator.addLine("Central:    " + std::to_string(central));
+    paginator.addLine("Standard:   " + std::to_string(standard));
+    paginator.addLine("Peripheral: " + std::to_string(peripheral));
+    paginator.display();
 }
 
 void CommandHandler::handleSave(const std::string& filename) {
