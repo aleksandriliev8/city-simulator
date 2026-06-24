@@ -1,8 +1,8 @@
 #include "CommandHandler.hpp"
 #include "../Paginator/Paginator.hpp"
+#include "../../utils/Validator/Validator.hpp"
 #include <iostream>
 #include <sstream>
-#include <string>
 
 CommandHandler::CommandHandler(Simulation& simulation) : simulation(simulation) {
 }
@@ -15,7 +15,7 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
     if (command == "generate") {
         int rows, cols;
         if (!(iss >> rows >> cols)) {
-            std::cout << "Usage: generate <n> <m>" << std::endl;
+            UI::printError("Usage: generate <n> <m>");
             return true;
         }
         handleGenerate(rows, cols);
@@ -24,7 +24,7 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
         int row, col, happiness, money, life;
         std::string name, job;
         if (!(iss >> row >> col >> name >> job >> happiness >> money >> life)) {
-            std::cout << "Usage: add <n> <m> <name> <job> <happiness> <money> <life>" << std::endl;
+            UI::printError("Usage: add <n> <m> <name> <job> <happiness> <money> <life>");
             return true;
         }
         handleAdd(row, col, name, job, happiness, money, life);
@@ -33,7 +33,7 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
         int row, col;
         std::string name;
         if (!(iss >> row >> col >> name)) {
-            std::cout << "Usage: remove <n> <m> <name>" << std::endl;
+            UI::printError("Usage: remove <n> <m> <name>");
             return true;
         }
         handleRemove(row, col, name);
@@ -61,7 +61,7 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
     else if (command == "stat") {
         std::string option;
         if (!(iss >> option)) {
-            std::cout << "Usage: stat <option>" << std::endl;
+            UI::printError("Usage: stat <happiness|money|life|profession|buildings>");
             return true;
         }
         if (option == "buildings") {
@@ -74,7 +74,7 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
     else if (command == "save") {
         std::string filename;
         if (!(iss >> filename)) {
-            std::cout << "Usage: save <name>" << std::endl;
+            UI::printError("Usage: save <name>");
             return true;
         }
         handleSave(filename);
@@ -82,29 +82,38 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
     else if (command == "load") {
         std::string filename;
         if (!(iss >> filename)) {
-            std::cout << "Usage: load <name>" << std::endl;
+            UI::printError("Usage: load <name>");
             return true;
         }
         handleLoad(filename);
+    }
+    else if (command == "help") {
+        UI::printHelp();
     }
     else if (command == "exit") {
         return false;
     }
     else {
-        std::cout << "Unknown command: " << command << std::endl;
+        UI::printError("Unknown command '" + command + "'. Type 'help' for available commands.");
     }
 
     return true;
 }
 
 void CommandHandler::run() {
+    UI::printHeader();
+    UI::printHelp();
+    std::cout << std::endl;
+
     std::string line;
     while (true) {
-        std::cout << "> ";
+        UI::printPrompt();
         if (!std::getline(std::cin, line)) break;
+        if (line.empty()) continue;
+
         if (!parseAndExecute(line)) {
             if (simulation.isUnsaved()) {
-                std::cout << "You have unsaved changes. Save before exit? (y/n): ";
+                UI::printWarning("You have unsaved changes. Save before exit? (y/n): ");
                 std::string answer;
                 std::getline(std::cin, answer);
                 if (answer == "y" || answer == "Y") {
@@ -121,67 +130,64 @@ void CommandHandler::run() {
 
 void CommandHandler::handleGenerate(int rows, int cols) {
     if (rows <= 0 || cols <= 0) {
-        std::cout << "Error: dimensions must be positive" << std::endl;
+        UI::printError("Dimensions must be positive.");
         return;
     }
     simulation.generate(rows, cols);
-    std::cout << simulation.getCity()->getCurrentDate().toString() << std::endl;
+    UI::printCityCreated(simulation.getCity()->getName(), simulation.getCity()->getCurrentDate().toString());
 }
 
 void CommandHandler::handleAdd(int row, int col, const std::string& name, const std::string& job, int happiness, int money, int life) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
-    if (happiness < 0 || happiness > 100) {
-        std::cout << "Error: happiness must be between 0 and 100" << std::endl;
-        return;
-    }
-    if (money < 0) {
-        std::cout << "Error: money must be non-negative" << std::endl;
-        return;
-    }
-    if (life < 0 || life > 100) {
-        std::cout << "Error: life must be between 0 and 100" << std::endl;
-        return;
-    }
+
+    std::string error;
+    if (!Validator::validatePosition(*simulation.getCity(), row, col, error)) { UI::printError(error); return; }
+    if (!Validator::validateCharacteristics(happiness, money, life, error)) { UI::printError(error); return; }
+    if (!Validator::validateProfession(job, error)) { UI::printError(error); return; }
+
     if (simulation.addResident(row, col, name, job, happiness, money, life)) {
-        std::cout << "Resident added successfully" << std::endl;
+        UI::printSuccess("Resident '" + name + "' added.");
     }
     else {
-        std::cout << "Error: could not add resident" << std::endl;
+        UI::printError("Could not add resident. Building may be full or student in non-dormitory.");
     }
 }
 
 void CommandHandler::handleRemove(int row, int col, const std::string& name) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
     if (simulation.removeResident(row, col, name)) {
-        std::cout << "Resident removed successfully" << std::endl;
+        UI::printSuccess("Resident '" + name + "' removed.");
     }
     else {
-        std::cout << "Error: resident not found" << std::endl;
+        UI::printError("Resident '" + name + "' not found at (" + std::to_string(row) + ", " + std::to_string(col) + ").");
     }
 }
 
 void CommandHandler::handleStep(int days) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
     try {
-        simulation.step(days);
+        int zeroHappiness = 0, zeroLife = 0, zeroMoney = 0;
+        simulation.step(days, zeroHappiness, zeroLife, zeroMoney);
+        UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
+        UI::printStepResult(zeroHappiness, zeroLife, zeroMoney);
     }
     catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << std::endl;
+        UI::printError(e.what());
     }
 }
 
 void CommandHandler::handleInfo() {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
 
@@ -190,20 +196,14 @@ void CommandHandler::handleInfo() {
 
     for (int i = 0; i < city->getRows(); i++) {
         for (int j = 0; j < city->getCols(); j++) {
-            paginator.addLine("Location " + std::to_string(i) + " " + std::to_string(j) + ":");
             Building* building = city->getBuilding(i, j);
             if (building == nullptr) {
-                paginator.addLine("    Empty");
+                paginator.addLine("Location (" + std::to_string(i) + ", " + std::to_string(j) + ") - Empty");
                 continue;
             }
-            paginator.addLine("    " + building->getType() + ":");
+            paginator.addLine(UI::formatLocation(i, j, building->getType()) + ":");
             for (int k = 0; k < building->getResidentCount(); k++) {
-                Resident* resident = building->getResidents()[k];
-                paginator.addLine("        " + resident->getName());
-                paginator.addLine("            Profession: " + resident->getProfession()->getName());
-                paginator.addLine("            Happiness:  " + std::to_string(resident->getHappiness()));
-                paginator.addLine("            Money:      " + std::to_string(resident->getMoney()));
-                paginator.addLine("            Life:       " + std::to_string(resident->getLife()));
+                paginator.addLine(UI::formatResident(*building->getResidents()[k]));
             }
         }
     }
@@ -213,116 +213,100 @@ void CommandHandler::handleInfo() {
 
 void CommandHandler::handleInfo(int row, int col) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
 
     City* city = simulation.getCity();
-
     if (!city->isValidPosition(row, col)) {
-        std::cout << "Error: invalid position" << std::endl;
+        UI::printError("Invalid position (" + std::to_string(row) + ", " + std::to_string(col) + ").");
         return;
     }
 
     Building* building = city->getBuilding(row, col);
     if (building == nullptr) {
-        std::cout << "Location (" << row << ", " << col << ") is empty" << std::endl;
+        UI::printError("No building at (" + std::to_string(row) + ", " + std::to_string(col) + ").");
         return;
     }
 
     Paginator paginator;
-    paginator.addLine("Type:        " + building->getType());
-    paginator.addLine("Rent:        " + std::to_string((int)building->getRent(city->getRows(), city->getCols())) + " EUR");
-    paginator.addLine("Capacity:    " + std::to_string(building->getCapacity()));
-    paginator.addLine("Free slots:  " + std::to_string(building->getFreeSlots()));
+    paginator.addLine(UI::formatBuildingInfo(
+        building->getType(),
+        (int)building->getRent(city->getRows(), city->getCols()),
+        building->getCapacity(),
+        building->getFreeSlots()
+    ));
     paginator.addLine("Residents:");
     for (int k = 0; k < building->getResidentCount(); k++) {
-        paginator.addLine("    " + building->getResidents()[k]->getName());
+        paginator.addLine(UI::formatResident(*building->getResidents()[k]));
     }
     paginator.display();
 }
 
 void CommandHandler::handleInfo(int row, int col, const std::string& name) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
 
     City* city = simulation.getCity();
-
     if (!city->isValidPosition(row, col)) {
-        std::cout << "Error: invalid position" << std::endl;
+        UI::printError("Invalid position (" + std::to_string(row) + ", " + std::to_string(col) + ").");
         return;
     }
 
     Building* building = city->getBuilding(row, col);
     if (building == nullptr) {
-        std::cout << "Error: no building at (" << row << ", " << col << ")" << std::endl;
+        UI::printError("No building at (" + std::to_string(row) + ", " + std::to_string(col) + ").");
         return;
     }
 
     Resident* resident = building->getResident(name);
     if (resident == nullptr) {
-        std::cout << "Error: resident " << name << " not found" << std::endl;
+        UI::printError("Resident '" + name + "' not found.");
         return;
     }
 
     Paginator paginator;
-    paginator.addLine("Name:       " + resident->getName());
-    paginator.addLine("Profession: " + resident->getProfession()->getName());
-    paginator.addLine("Happiness:  " + std::to_string(resident->getHappiness()));
-    paginator.addLine("Money:      " + std::to_string(resident->getMoney()));
-    paginator.addLine("Life:       " + std::to_string(resident->getLife()));
-    paginator.addLine("History:");
-    for (int h = 0; h < (int)resident->getHistory().size(); h++) {
-        paginator.addLine("    " + resident->getHistory()[h].toString());
-    }
+    paginator.addLine(UI::formatResidentFull(*resident));
     paginator.display();
 }
 
 void CommandHandler::handleStat(const std::string& option) {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
+        return;
+    }
+
+    if (option != "happiness" && option != "money" && option != "life" && option != "profession") {
+        UI::printError("Invalid option. Use: happiness, money, life, profession.");
         return;
     }
 
     City* city = simulation.getCity();
-
-    if (option != "happiness" && option != "money" && option != "life" && option != "profession") {
-        std::cout << "Error: invalid option. Use happiness, money, life or profession" << std::endl;
-        return;
-    }
-
-    int total = 0;
-    int min = 101;
-    int max = -1;
-    int count = 0;
-
+    int total = 0, min = 101, max = -1, count = 0;
     int teachers = 0, programmers = 0, miners = 0, unemployed = 0, students = 0;
 
     for (int i = 0; i < city->getRows(); i++) {
         for (int j = 0; j < city->getCols(); j++) {
             Building* building = city->getBuilding(i, j);
             if (building == nullptr) continue;
-
             for (int k = 0; k < building->getResidentCount(); k++) {
                 Resident* resident = building->getResidents()[k];
                 count++;
-
-                int value = 0;
-                if (option == "happiness") value = resident->getHappiness();
-                else if (option == "money")     value = resident->getMoney();
-                else if (option == "life")      value = resident->getLife();
-                else if (option == "profession") {
+                if (option == "profession") {
                     std::string prof = resident->getProfession()->getName();
-                    if (prof == "Teacher")    teachers++;
+                    if (prof == "Teacher")         teachers++;
                     else if (prof == "Programmer") programmers++;
                     else if (prof == "Miner")      miners++;
                     else if (prof == "Unemployed") unemployed++;
                     else if (prof == "Student")    students++;
                     continue;
                 }
-
+                int value = 0;
+                if (option == "happiness")     value = resident->getHappiness();
+                else if (option == "money")    value = resident->getMoney();
+                else if (option == "life")     value = resident->getLife();
                 total += value;
                 if (value < min) min = value;
                 if (value > max) max = value;
@@ -331,37 +315,30 @@ void CommandHandler::handleStat(const std::string& option) {
     }
 
     Paginator paginator;
-
+    paginator.addLine("Total residents: " + std::to_string(count));
     if (option == "profession") {
-        paginator.addLine("Total residents: " + std::to_string(count));
-        paginator.addLine("Teachers:        " + std::to_string(teachers));
-        paginator.addLine("Programmers:     " + std::to_string(programmers));
-        paginator.addLine("Miners:          " + std::to_string(miners));
-        paginator.addLine("Unemployed:      " + std::to_string(unemployed));
-        paginator.addLine("Students:        " + std::to_string(students));
+        paginator.addLine("Teachers:    " + std::to_string(teachers));
+        paginator.addLine("Programmers: " + std::to_string(programmers));
+        paginator.addLine("Miners:      " + std::to_string(miners));
+        paginator.addLine("Unemployed:  " + std::to_string(unemployed));
+        paginator.addLine("Students:    " + std::to_string(students));
     }
     else {
-        if (count == 0) {
-            std::cout << "No residents in simulation" << std::endl;
-            return;
-        }
-        paginator.addLine("Total residents: " + std::to_string(count));
-        paginator.addLine("Average:         " + std::to_string(total / count));
-        paginator.addLine("Min:             " + std::to_string(min));
-        paginator.addLine("Max:             " + std::to_string(max));
+        if (count == 0) { UI::printError("No residents in simulation."); return; }
+        paginator.addLine("Average: " + std::to_string(total / count));
+        paginator.addLine("Min:     " + std::to_string(min));
+        paginator.addLine("Max:     " + std::to_string(max));
     }
-
     paginator.display();
 }
 
 void CommandHandler::handleStatBuildings() {
     if (!simulation.hasCity()) {
-        std::cout << "Error: no active simulation" << std::endl;
+        UI::printError("No active simulation.");
         return;
     }
 
     City* city = simulation.getCity();
-
     int modern = 0, panel = 0, dormitory = 0;
     int central = 0, peripheral = 0, standard = 0;
 
@@ -373,14 +350,12 @@ void CommandHandler::handleStatBuildings() {
         for (int j = 0; j < city->getCols(); j++) {
             Building* building = city->getBuilding(i, j);
             if (building == nullptr) continue;
-
             std::string type = building->getType();
-            if (type == "Modern")    modern++;
-            else if (type == "Panel")     panel++;
-            else if (type == "Dormitory") dormitory++;
-
+            if (type == "Modern")          modern++;
+            else if (type == "Panel")      panel++;
+            else if (type == "Dormitory")  dormitory++;
             double distance = std::sqrt((i - centerRow) * (i - centerRow) + (j - centerCol) * (j - centerCol));
-            if (distance <= minDim / 8.0)          central++;
+            if (distance <= minDim / 8.0)            central++;
             else if (distance > 6.0 * minDim / 8.0) peripheral++;
             else                                     standard++;
         }
@@ -401,19 +376,20 @@ void CommandHandler::handleStatBuildings() {
 void CommandHandler::handleSave(const std::string& filename) {
     try {
         simulation.save(filename);
-        std::cout << "Simulation saved successfully" << std::endl;
+        UI::printSuccess("Simulation saved to '" + filename + "'.");
     }
     catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << std::endl;
+        UI::printError(e.what());
     }
 }
 
 void CommandHandler::handleLoad(const std::string& filename) {
     try {
         simulation.load(filename);
-        std::cout << "Simulation loaded successfully" << std::endl;
+        UI::printSuccess("Simulation '" + filename + "' loaded.");
+        UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
     }
     catch (const std::exception& e) {
-        std::cout << "Error: " << e.what() << std::endl;
+        UI::printError(e.what());
     }
 }

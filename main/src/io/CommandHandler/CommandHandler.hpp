@@ -2,6 +2,7 @@
 
 #include <string>
 #include "../../simulation/Simulation/Simulation.hpp"
+#include "../UI/UI.hpp"
 
 class CommandHandler {
 private:
