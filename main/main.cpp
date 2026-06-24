@@ -1,5 +1,5 @@
 #include "src/simulation/Simulation/Simulation.hpp"
-#include "src/simulation/CommandHandler/CommandHandler.hpp"
+#include "src/io/CommandHandler/CommandHandler.hpp"
 #include "src/utils/Random/Random.hpp"
 
 int main() {
