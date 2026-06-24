@@ -1,5 +1,5 @@
 #include "Unemployed.hpp"
-//#include "../core/Resident.hpp"
+#include "../../core/Resident/Resident.hpp"
 
 std::string Unemployed::getName() const {
     return "Unemployed";
@@ -10,8 +10,11 @@ int Unemployed::generateSalary() const {
 }
 
 void Unemployed::applyMonthlyEffect(Resident& resident) {
-    // TODO: resident.setLife(max(resident.getLife() - 1, 0));
-    // TODO: resident.setHappiness(max(resident.getHappiness() - 1, 0));
+    int newLife = resident.getLife() - 1;
+    resident.setLife(newLife < 0 ? 0 : newLife);
+
+    int newHappiness = resident.getHappiness() - 1;
+    resident.setHappiness(newHappiness < 0 ? 0 : newHappiness);
 }
 
 Profession* Unemployed::clone() const {

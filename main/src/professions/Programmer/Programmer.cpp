@@ -1,5 +1,5 @@
 #include "Programmer.hpp"
-//#include "../core/Resident.hpp"
+#include "../../core/Resident/Resident.hpp"
 #include "../../utils/Random/Random.hpp"
 
 std::string Programmer::getName() const {
@@ -11,9 +11,9 @@ int Programmer::generateSalary() const {
 }
 
 void Programmer::applyMonthlyEffect(Resident& resident) {
-    // TODO: resident.setHappiness(max(resident.getHappiness() - 1, 0));
+    int newHappiness = resident.getHappiness() - 1;
+    resident.setHappiness(newHappiness < 0 ? 0 : newHappiness);
 }
-
 Profession* Programmer::clone() const {
     return new Programmer(*this);
 }

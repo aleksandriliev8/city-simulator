@@ -1,5 +1,5 @@
 #include "Miner.hpp"
-#include "../core/Resident.hpp"
+#include "../../core/Resident/Resident.hpp"
 #include "../../utils/Random/Random.hpp"
 
 std::string Miner::getName() const {
@@ -11,7 +11,8 @@ int Miner::generateSalary() const {
 }
 
 void Miner::applyMonthlyEffect(Resident& resident) {
-    // TODO: resident.setLife(max(resident.getLife() - 2, 0));
+    int newLife = resident.getLife() - 2;
+    resident.setLife(newLife < 0 ? 0 : newLife);
 }
 
 Profession* Miner::clone() const {
