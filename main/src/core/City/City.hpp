@@ -1,0 +1,38 @@
+#pragma once
+
+#include <string>
+#include <vector>
+#include "../Building/Building.hpp"
+#include "../../utils/Date/Date.hpp"
+
+class City {
+private:
+    std::string name;
+    int rows;
+    int cols;
+    Date startDate;
+    Date currentDate;
+    std::vector<std::vector<Building*>> matrix;
+    // TODO: History history;
+
+    void allocateMatrix();
+    void deallocateMatrix();
+
+public:
+    City(const std::string& name, int rows, int cols);
+    ~City();
+    City(const City& other);
+    City& operator=(const City& other);
+
+    const std::string& getName() const;
+    int getRows() const;
+    int getCols() const;
+    const Date& getStartDate() const;
+    const Date& getCurrentDate() const;
+
+    Building* getBuilding(int row, int col) const;
+    void setBuilding(int row, int col, Building* building);
+    bool isValidPosition(int row, int col) const;
+
+    void advanceDate(int days);
+};
