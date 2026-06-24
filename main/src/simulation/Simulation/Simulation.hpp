@@ -27,5 +27,6 @@ public:
 
     City* getCity() const;
     bool hasCity() const;
+    void setCity(City* city);
     bool isUnsaved() const;
 };

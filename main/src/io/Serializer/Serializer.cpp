@@ -148,8 +148,8 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
     file.read((char*)&curMonth, sizeof(int));
     file.read((char*)&curYear, sizeof(int));
 
-    simulation.generate(rows, cols);
-    City* city = simulation.getCity();
+City* city = new City(name, rows, cols, Date(startDay, startMonth, startYear), Date(curDay, curMonth, curYear));
+simulation.setCity(city);
 
     // read matrix
     for (int i = 0; i < rows; i++) {

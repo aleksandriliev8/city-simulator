@@ -6,6 +6,11 @@ City::City(const std::string& name, int rows, int cols)
     allocateMatrix();
 }
 
+City::City(const std::string& name, int rows, int cols, const Date& startDate, const Date& currentDate)
+    : name(name), matrix(), history(), startDate(startDate), currentDate(currentDate), rows(rows), cols(cols) {
+    allocateMatrix();
+}
+
 City::~City() {
     deallocateMatrix();
 }

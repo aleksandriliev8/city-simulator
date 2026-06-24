@@ -208,6 +208,12 @@ bool Simulation::hasCity() const {
     return city != nullptr;
 }
 
+void Simulation::setCity(City* city) {
+    delete this->city;
+    this->city = city;
+    hasUnsavedChanges = false;
+}
+
 bool Simulation::isUnsaved() const {
     return hasUnsavedChanges;
 }
