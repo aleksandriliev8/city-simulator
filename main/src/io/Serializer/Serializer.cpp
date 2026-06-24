@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 void Serializer::save(const Simulation& simulation, const std::string& filename) {
-    std::ofstream file("data/" + filename + ".bin", std::ios::binary);
+    std::ofstream file("data/" + filename + ".dat", std::ios::binary);
     if (!file) {
         throw std::runtime_error("Could not open file for writing: " + filename);
     }
@@ -116,7 +116,7 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
 }
 
 void Serializer::load(Simulation& simulation, const std::string& filename) {
-    std::ifstream file("data/" + filename + ".bin", std::ios::binary);
+    std::ifstream file("data/" + filename + ".dat", std::ios::binary);
     if (!file) {
         throw std::runtime_error("Could not open file: " + filename);
     }
