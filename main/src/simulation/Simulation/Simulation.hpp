@@ -22,7 +22,7 @@ public:
     bool addResident(int row, int col, const std::string& name, const std::string& job, int happiness, int money, int life);
     bool removeResident(int row, int col, const std::string& name);
 
-    void save(const std::string& filename) const;
+    void save(const std::string& filename);
     void load(const std::string& filename);
 
     City* getCity() const;
