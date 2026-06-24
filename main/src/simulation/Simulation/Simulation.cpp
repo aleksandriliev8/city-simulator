@@ -1,4 +1,5 @@
 #include "Simulation.hpp"
+#include "../../io/Serializer/Serializer.hpp"
 #include "../../buildings/ModernBuilding/ModernBuilding.hpp"
 #include "../../buildings/PanelBuilding/PanelBuilding.hpp"
 #include "../../buildings/Dormitory/Dormitory.hpp"
@@ -7,7 +8,6 @@
 #include "../../professions/Miner/Miner.hpp"
 #include "../../professions/Unemployed/Unemployed.hpp"
 #include "../../professions/Student/Student.hpp"
-#include "../../io/Serializer/Serializer.hpp"
 #include "../../utils/Random/Random.hpp"
 #include <stdexcept>
 #include <fstream>
@@ -56,19 +56,19 @@ void Simulation::generate(int rows, int cols) {
             if (Random::randomBool(0.7)) {
                 int type = Random::randomInt(0, 2);
                 Building* building = nullptr;
-                if (type == 0)      building = new ModernBuilding(i, j);
+                if (type == 0) building = new ModernBuilding(i, j);
                 else if (type == 1) building = new PanelBuilding(i, j);
-                else                building = new Dormitory(i, j);
+                else building = new Dormitory(i, j);
 
                 int residentCount = Random::randomInt(0, building->getCapacity() / 10);
                 for (int r = 0; r < residentCount; r++) {
                     int profType = Random::randomInt(0, 4);
                     Profession* profession = nullptr;
-                    if (profType == 0)      profession = new Teacher();
+                    if (profType == 0) profession = new Teacher();
                     else if (profType == 1) profession = new Programmer();
                     else if (profType == 2) profession = new Miner();
                     else if (profType == 3) profession = new Unemployed();
-                    else                    profession = new Student();
+                    else profession = new Student();
 
                     if (profession->getName() == "Student" && !building->canHouseStudent()) {
                         delete profession;
@@ -93,7 +93,7 @@ void Simulation::generate(int rows, int cols) {
     hasUnsavedChanges = true;
 }
 
-void Simulation::step(int days) {
+void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMoney) {
     if (!hasCity()) {
         throw std::runtime_error("No active simulation");
     }
@@ -103,6 +103,10 @@ void Simulation::step(int days) {
     }
 
     snapshots.push_back(new City(*city));
+
+    zeroHappiness = 0;
+    zeroLife = 0;
+    zeroMoney = 0;
 
     for (int d = 0; d < (days > 0 ? days : -days); d++) {
         city->advanceDate(days > 0 ? 1 : -1);
@@ -124,6 +128,10 @@ void Simulation::step(int days) {
                     }
 
                     resident->payFood(city->getCurrentDate());
+
+                    if (resident->getHappiness() == 0) zeroHappiness++;
+                    if (resident->getLife() == 0) zeroLife++;
+                    if (resident->getMoney() == 0) zeroMoney++;
 
                     if (!resident->isAlive()) {
                         toRemove.push_back(resident->getName());
@@ -149,11 +157,11 @@ bool Simulation::addResident(int row, int col, const std::string& name, const st
     if (building->isFull()) return false;
 
     Profession* profession = nullptr;
-    if (job == "Teacher")          profession = new Teacher();
-    else if (job == "Programmer")  profession = new Programmer();
-    else if (job == "Miner")       profession = new Miner();
-    else if (job == "Unemployed")  profession = new Unemployed();
-    else if (job == "Student")     profession = new Student();
+    if (job == "Teacher") profession = new Teacher();
+    else if (job == "Programmer") profession = new Programmer();
+    else if (job == "Miner") profession = new Miner();
+    else if (job == "Unemployed") profession = new Unemployed();
+    else if (job == "Student") profession = new Student();
     else return false;
 
     if (job == "Student" && !building->canHouseStudent()) {

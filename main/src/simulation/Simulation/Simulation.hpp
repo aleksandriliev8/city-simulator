@@ -17,7 +17,7 @@ public:
     Simulation& operator=(const Simulation&) = delete;
 
     void generate(int rows, int cols);
-    void step(int days);
+    void step(int days, int& zeroHappiness, int& zeroLife, int& zeroMoney);
 
     bool addResident(int row, int col, const std::string& name, const std::string& job, int happiness, int money, int life);
     bool removeResident(int row, int col, const std::string& name);
