@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 City::City(const std::string& name, int rows, int cols)
-    : name(name), rows(rows), cols(cols), startDate(), currentDate() {
+    : name(name), rows(rows), history(), cols(cols), startDate(), currentDate() {
     allocateMatrix();
 }
 
@@ -11,8 +11,9 @@ City::~City() {
 }
 
 City::City(const City& other)
-    : name(other.name), rows(other.rows), cols(other.cols),
-    startDate(other.startDate), currentDate(other.currentDate) {
+    : name(other.name), history(other.history), // CHANGED: added history
+    startDate(other.startDate), currentDate(other.currentDate),
+    rows(other.rows), cols(other.cols) {
     allocateMatrix();
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -36,6 +37,7 @@ City& City::operator=(const City& other) {
         deallocateMatrix();
         matrix = newMatrix;
         name = other.name;
+        history = other.history; // CHANGED: added history
         rows = other.rows;
         cols = other.cols;
         startDate = other.startDate;
@@ -76,6 +78,10 @@ const Date& City::getCurrentDate() const {
     return currentDate;
 }
 
+const std::vector<HistoryEntry>& City::getHistory() const {
+    return history;
+}
+
 Building* City::getBuilding(int row, int col) const {
     if (!isValidPosition(row, col)) {
         throw std::invalid_argument("City: invalid position");
@@ -84,3 +90,21 @@ Building* City::getBuilding(int row, int col) const {
 }
 
 void City::setBuilding(int row, int col, Building* building) {
+    if (!isValidPosition(row, col)) {
+        throw std::invalid_argument("City: invalid position");
+    }
+    delete matrix[row][col];
+    matrix[row][col] = building;
+}
+
+bool City::isValidPosition(int row, int col) const {
+    return row >= 0 && row < rows && col >= 0 && col < cols;
+}
+
+void City::advanceDate(int days) {
+    currentDate = currentDate.addDays(days);
+}
+
+void City::addHistoryEntry(const std::string& description) {
+    history.push_back(HistoryEntry(currentDate, description));
+}

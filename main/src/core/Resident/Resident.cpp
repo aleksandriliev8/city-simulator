@@ -1,7 +1,7 @@
 #include "Resident.hpp"
 
 Resident::Resident(const std::string& name, Profession* profession, int happiness, int money, int life)
-    : name(name), profession(profession), happiness(happiness), money(money), life(life) {
+    : name(name), history(), profession(profession), happiness(happiness), money(money), life(life) {
 }
 
 Resident::~Resident() {
@@ -9,7 +9,8 @@ Resident::~Resident() {
 }
 
 Resident::Resident(const Resident& other)
-    : name(other.name), profession(other.profession->clone()), happiness(other.happiness), money(other.money), life(other.life) {
+    : name(other.name), history(other.history), profession(other.profession->clone()),
+      happiness(other.happiness), money(other.money), life(other.life) {
 }
 
 Resident& Resident::operator=(const Resident& other) {
@@ -18,6 +19,7 @@ Resident& Resident::operator=(const Resident& other) {
         delete profession;
         profession = newProfession;
         name = other.name;
+        history = other.history;
         happiness = other.happiness;
         money = other.money;
         life = other.life;
@@ -27,6 +29,10 @@ Resident& Resident::operator=(const Resident& other) {
 
 const std::string& Resident::getName() const {
     return name;
+}
+
+const std::vector<HistoryEntry>& Resident::getHistory() const {
+    return history;
 }
 
 Profession* Resident::getProfession() const {
@@ -62,28 +68,36 @@ void Resident::setLife(int life) {
     this->life = life;
 }
 
+void Resident::addHistoryEntry(const Date& date, const std::string& description) {
+    history.push_back(HistoryEntry(date, description));
+}
+
 void Resident::applyMonthlyEffects() {
     money += profession->generateSalary();
     profession->applyMonthlyEffect(*this);
 }
 
-void Resident::payRent(int rent) {
+void Resident::payRent(int rent, const Date& date) {
     if (money >= rent) {
         money -= rent;
+        addHistoryEntry(date, "Paid rent: " + std::to_string(rent) + " EUR");
     }
     else {
         happiness = happiness - 10 < 0 ? 0 : happiness - 10;
         life = life - 10 < 0 ? 0 : life - 10;
+        addHistoryEntry(date, "Could not pay rent");
     }
 }
 
-void Resident::payFood() {
+void Resident::payFood(const Date& date) {
     if (money >= 50) {
         money -= 50;
+        addHistoryEntry(date, "Paid food: 50 EUR");
     }
     else {
         happiness = happiness - 5 < 0 ? 0 : happiness - 5;
         life = life - 5 < 0 ? 0 : life - 5;
+        addHistoryEntry(date, "Could not pay food");
     }
 }
 

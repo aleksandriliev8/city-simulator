@@ -3,17 +3,18 @@
 #include <string>
 #include <vector>
 #include "../Building/Building.hpp"
+#include "../HistoryEntry/HistoryEntry.hpp"
 #include "../../utils/Date/Date.hpp"
 
 class City {
 private:
     std::string name;
-    int rows;
-    int cols;
+    std::vector<std::vector<Building*>> matrix;
+    std::vector<HistoryEntry> history;
     Date startDate;
     Date currentDate;
-    std::vector<std::vector<Building*>> matrix;
-    // TODO: History history;
+    int rows;
+    int cols;
 
     void allocateMatrix();
     void deallocateMatrix();
@@ -29,10 +30,12 @@ public:
     int getCols() const;
     const Date& getStartDate() const;
     const Date& getCurrentDate() const;
+    const std::vector<HistoryEntry>& getHistory() const;
 
     Building* getBuilding(int row, int col) const;
     void setBuilding(int row, int col, Building* building);
     bool isValidPosition(int row, int col) const;
 
     void advanceDate(int days);
+    void addHistoryEntry(const std::string& description);
 };
