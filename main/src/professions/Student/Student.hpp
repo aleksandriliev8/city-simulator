@@ -1,4 +1,5 @@
 #pragma once
+
 #include "../Profession/Profession.hpp"
 
 class Student : public Profession {

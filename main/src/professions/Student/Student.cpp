@@ -1,4 +1,5 @@
 #include "Student.hpp"
+
 #include "../../core/Resident/Resident.hpp"
 
 std::string Student::getName() const {
