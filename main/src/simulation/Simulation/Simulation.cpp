@@ -7,7 +7,7 @@
 #include "../../professions/Miner/Miner.hpp"
 #include "../../professions/Unemployed/Unemployed.hpp"
 #include "../../professions/Student/Student.hpp"
-#include "../../simulation/Serializer/Serializer.hpp"
+#include "../../io/Serializer/Serializer.hpp"
 #include "../../utils/Random/Random.hpp"
 #include <stdexcept>
 #include <fstream>
