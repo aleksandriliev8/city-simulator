@@ -129,10 +129,6 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
 
                     resident->payFood(city->getCurrentDate());
 
-                    if (resident->getHappiness() == 0) zeroHappiness++;
-                    if (resident->getLife() == 0) zeroLife++;
-                    if (resident->getMoney() == 0) zeroMoney++;
-
                     if (!resident->isAlive()) {
                         toRemove.push_back(resident->getName());
                     }
@@ -141,6 +137,19 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
                 for (int r = 0; r < (int)toRemove.size(); r++) {
                     building->removeResident(toRemove[r]);
                 }
+            }
+        }
+    }
+
+    for (int i = 0; i < city->getRows(); i++) {
+        for (int j = 0; j < city->getCols(); j++) {
+            Building* building = city->getBuilding(i, j);
+            if (building == nullptr) continue;
+            for (int k = 0; k < building->getResidentCount(); k++) {
+                Resident* resident = building->getResidents()[k];
+                if (resident->getHappiness() == 0) zeroHappiness++;
+                if (resident->getLife() == 0) zeroLife++;
+                if (resident->getMoney() == 0) zeroMoney++;
             }
         }
     }
