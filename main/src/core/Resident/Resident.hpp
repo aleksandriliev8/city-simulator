@@ -33,7 +33,7 @@ public:
 
     void addHistoryEntry(const Date& date, const std::string& description);
 
-    void applyMonthlyEffects();
+    void applyMonthlyEffects(const Date& date);
     void payRent(int rent, const Date& date);
     void payFood(const Date& date);
     bool isAlive() const;

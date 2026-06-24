@@ -72,8 +72,10 @@ void Resident::addHistoryEntry(const Date& date, const std::string& description)
     history.push_back(HistoryEntry(date, description));
 }
 
-void Resident::applyMonthlyEffects() {
-    money += profession->generateSalary();
+void Resident::applyMonthlyEffects(const Date& date) {
+    int salary = profession->generateSalary();
+    money += salary;
+    addHistoryEntry(date, "Received salary: " + std::to_string(salary) + " EUR");
     profession->applyMonthlyEffect(*this);
 }
 
