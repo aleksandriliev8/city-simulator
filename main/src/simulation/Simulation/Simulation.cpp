@@ -93,49 +93,70 @@ void Simulation::generate(int rows, int cols) {
     hasUnsavedChanges = true;
 }
 
+City* Simulation::findSnapshot(const Date& date) const {
+    for (int i = (int)snapshots.size() - 1; i >= 0; i--) {
+        if (snapshots[i]->getCurrentDate() == date) {
+            return snapshots[i];
+        }
+    }
+    return nullptr;
+}
+
 void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMoney) {
     if (!hasCity()) {
         throw std::runtime_error("No active simulation");
     }
 
-    if (city->getCurrentDate().addDays(days) < city->getStartDate()) {
+    Date targetDate = city->getCurrentDate().addDays(days);
+
+    if (targetDate < city->getStartDate()) {
         throw std::invalid_argument("Cannot step before simulation start date");
     }
-
-    snapshots.push_back(new City(*city));
 
     zeroHappiness = 0;
     zeroLife = 0;
     zeroMoney = 0;
 
-    for (int d = 0; d < (days > 0 ? days : -days); d++) {
-        city->advanceDate(days > 0 ? 1 : -1);
+    if (days < 0) {
+        City* snapshot = findSnapshot(targetDate);
+        if (snapshot == nullptr) {
+            throw std::invalid_argument("No snapshot found for that date");
+        }
+        delete city;
+        city = new City(*snapshot);
+    }
+    else {
+        snapshots.push_back(new City(*city));
 
-        for (int i = 0; i < city->getRows(); i++) {
-            for (int j = 0; j < city->getCols(); j++) {
-                Building* building = city->getBuilding(i, j);
-                if (building == nullptr) continue;
+        for (int d = 0; d < days; d++) {
+            city->advanceDate(1);
 
-                double rent = building->getRent(city->getRows(), city->getCols());
-                std::vector<std::string> toRemove;
+            for (int i = 0; i < city->getRows(); i++) {
+                for (int j = 0; j < city->getCols(); j++) {
+                    Building* building = city->getBuilding(i, j);
+                    if (building == nullptr) continue;
 
-                for (int k = 0; k < building->getResidentCount(); k++) {
-                    Resident* resident = building->getResidents()[k];
+                    double rent = building->getRent(city->getRows(), city->getCols());
+                    std::vector<std::string> toRemove;
 
-                    if (city->getCurrentDate().isFirstOfMonth()) {
-                        resident->applyMonthlyEffects(city->getCurrentDate());
-                        resident->payRent((int)rent, city->getCurrentDate());
+                    for (int k = 0; k < building->getResidentCount(); k++) {
+                        Resident* resident = building->getResidents()[k];
+
+                        if (city->getCurrentDate().isFirstOfMonth()) {
+                            resident->applyMonthlyEffects(city->getCurrentDate());
+                            resident->payRent((int)rent, city->getCurrentDate());
+                        }
+
+                        resident->payFood(city->getCurrentDate());
+
+                        if (!resident->isAlive()) {
+                            toRemove.push_back(resident->getName());
+                        }
                     }
 
-                    resident->payFood(city->getCurrentDate());
-
-                    if (!resident->isAlive()) {
-                        toRemove.push_back(resident->getName());
+                    for (int r = 0; r < (int)toRemove.size(); r++) {
+                        building->removeResident(toRemove[r]);
                     }
-                }
-
-                for (int r = 0; r < (int)toRemove.size(); r++) {
-                    building->removeResident(toRemove[r]);
                 }
             }
         }
@@ -148,8 +169,8 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
             for (int k = 0; k < building->getResidentCount(); k++) {
                 Resident* resident = building->getResidents()[k];
                 if (resident->getHappiness() == 0) zeroHappiness++;
-                if (resident->getLife() == 0) zeroLife++;
-                if (resident->getMoney() == 0) zeroMoney++;
+                if (resident->getLife() == 0)      zeroLife++;
+                if (resident->getMoney() == 0)     zeroMoney++;
             }
         }
     }

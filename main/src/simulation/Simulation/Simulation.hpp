@@ -10,6 +10,9 @@ private:
     std::vector<City*> snapshots;
     bool hasUnsavedChanges;
 
+private:
+    City* findSnapshot(const Date& date) const;
+
 public:
     Simulation();
     ~Simulation();
