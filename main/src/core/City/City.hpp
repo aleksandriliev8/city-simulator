@@ -21,6 +21,7 @@ private:
 
 public:
     City(const std::string& name, int rows, int cols);
+    City(const std::string& name, int rows, int cols, const Date& startDate, const Date& currentDate);
     ~City();
     City(const City& other);
     City& operator=(const City& other);

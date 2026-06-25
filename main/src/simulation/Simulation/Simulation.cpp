@@ -123,7 +123,7 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
                     Resident* resident = building->getResidents()[k];
 
                     if (city->getCurrentDate().isFirstOfMonth()) {
-                        resident->applyMonthlyEffects();
+                        resident->applyMonthlyEffects(city->getCurrentDate());
                         resident->payRent((int)rent, city->getCurrentDate());
                     }
 
