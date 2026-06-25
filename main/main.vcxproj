@@ -124,6 +124,59 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\buildings\Dormitory\Dormitory.cpp" />
+    <ClCompile Include="src\buildings\ModernBuilding\ModernBuilding.cpp" />
+    <ClCompile Include="src\core\Building\Building.cpp" />
+    <ClCompile Include="src\core\City\City.cpp" />
+    <ClCompile Include="src\core\HistoryEntry\HistoryEntry.cpp" />
+    <ClCompile Include="src\core\Resident\Resident.cpp" />
+    <ClCompile Include="src\io\CommandHandler\InfoCommands.cpp" />
+    <ClCompile Include="src\io\CommandHandler\SimCommands.cpp" />
+    <ClCompile Include="src\io\CommandHandler\StatCommands.cpp" />
+    <ClCompile Include="src\io\UI\UI.cpp" />
+    <ClCompile Include="src\professions\Miner\Miner.cpp" />
+    <ClCompile Include="src\professions\Programmer\Programmer.cpp" />
+    <ClCompile Include="src\professions\Student\Student.cpp" />
+    <ClCompile Include="src\professions\Teacher\Teacher.cpp" />
+    <ClCompile Include="src\professions\Unemployed\Unemployed.cpp" />
+    <ClCompile Include="src\io\CommandHandler\CommandHandler.cpp" />
+    <ClCompile Include="src\io\Paginator\Paginator.cpp" />
+    <ClCompile Include="src\io\Serializer\Serializer.cpp" />
+    <ClCompile Include="src\simulation\Simulation\Simulation.cpp" />
+    <ClCompile Include="src\utils\Date\Date.cpp" />
+    <ClCompile Include="src\utils\Random\Random.cpp" />
+    <ClCompile Include="src\utils\StringUtils\StringUtils.cpp" />
+    <ClCompile Include="src\utils\Validator\Validator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\buildings\Dormitory\Dormitory.hpp" />
+    <ClInclude Include="src\buildings\ModernBuilding\ModernBuilding.hpp" />
+    <ClInclude Include="src\buildings\PanelBuilding\PanelBuilding.hpp" />
+    <ClInclude Include="src\core\Building\Building.hpp" />
+    <ClInclude Include="src\core\City\City.hpp" />
+    <ClInclude Include="src\core\HistoryEntry\HistoryEntry.hpp" />
+    <ClInclude Include="src\core\Resident\Resident.hpp" />
+    <ClInclude Include="src\io\CommandHandler\InfoCommands.hpp" />
+    <ClInclude Include="src\io\CommandHandler\SimCommands.hpp" />
+    <ClInclude Include="src\io\CommandHandler\StatCommands.hpp" />
+    <ClInclude Include="src\io\UI\UI.hpp" />
+    <ClInclude Include="src\professions\Miner\Miner.hpp" />
+    <ClInclude Include="src\professions\Profession\Profession.hpp" />
+    <ClInclude Include="src\professions\Programmer\Programmer.hpp" />
+    <ClInclude Include="src\professions\Student\Student.hpp" />
+    <ClInclude Include="src\professions\Teacher\Teacher.hpp" />
+    <ClInclude Include="src\professions\Unemployed\Unemployed.hpp" />
+    <ClInclude Include="src\io\CommandHandler\CommandHandler.hpp" />
+    <ClInclude Include="src\io\Paginator\Paginator.hpp" />
+    <ClInclude Include="src\io\Serializer\Serializer.hpp" />
+    <ClInclude Include="src\simulation\Simulation\Simulation.hpp" />
+    <ClInclude Include="src\utils\Date\Date.hpp" />
+    <ClInclude Include="src\utils\Random\Random.hpp" />
+    <ClInclude Include="src\utils\StringUtils\StringUtils.hpp" />
+    <ClInclude Include="src\utils\Validator\Validator.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\buildings\PanelBuilding\PanelBuilding.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

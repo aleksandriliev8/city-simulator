@@ -1,0 +1,104 @@
+#include "Building.hpp"
+#include <cmath>
+#include <stdexcept>
+
+Building::Building(int row, int col) : row(row), col(col) {
+}
+
+Building::~Building() {
+    for (int i = 0; i < (int)residents.size(); i++) {
+        delete residents[i];
+    }
+}
+
+Building::Building(const Building& other) : row(other.row), col(other.col) {
+    for (int i = 0; i < (int)other.residents.size(); i++) {
+        residents.push_back(new Resident(*other.residents[i]));
+    }
+}
+
+Building& Building::operator=(const Building& other) {
+    if (this != &other) {
+        std::vector<Resident*> newResidents;
+        for (int i = 0; i < (int)other.residents.size(); i++) {
+            newResidents.push_back(new Resident(*other.residents[i]));
+        }
+        for (int i = 0; i < (int)residents.size(); i++) {
+            delete residents[i];
+        }
+        residents = newResidents;
+        row = other.row;
+        col = other.col;
+    }
+    return *this;
+}
+
+int Building::getRow() const {
+    return row;
+}
+
+int Building::getCol() const {
+    return col;
+}
+
+double Building::getRent(int n, int m) const {
+    double centerRow = n / 2.0;
+    double centerCol = m / 2.0;
+    double distance = std::sqrt((row - centerRow) * (row - centerRow) + (col - centerCol) * (col - centerCol));
+    double minDim = (double)(n < m ? n : m);
+
+    if (distance <= minDim / 8.0) {
+        return getBaseRent() * 2.5;
+    }
+    else if (distance > 6.0 * minDim / 8.0) {
+        return getBaseRent() * 0.8;
+    }
+    return getBaseRent();
+}
+
+bool Building::addResident(Resident* resident) {
+    if (isFull()) {
+        return false;
+    }
+    if (getResident(resident->getName()) != nullptr) {
+        return false;
+    }
+    residents.push_back(resident);
+    return true;
+}
+
+bool Building::removeResident(const std::string& name) {
+    for (int i = 0; i < (int)residents.size(); i++) {
+        if (residents[i]->getName() == name) {
+            delete residents[i];
+            residents.erase(residents.begin() + i);
+            return true;
+        }
+    }
+    return false;
+}
+
+Resident* Building::getResident(const std::string& name) const {
+    for (int i = 0; i < (int)residents.size(); i++) {
+        if (residents[i]->getName() == name) {
+            return residents[i];
+        }
+    }
+    return nullptr;
+}
+
+const std::vector<Resident*>& Building::getResidents() const {
+    return residents;
+}
+
+int Building::getResidentCount() const {
+    return (int)residents.size();
+}
+
+int Building::getFreeSlots() const {
+    return getCapacity() - getResidentCount();
+}
+
+bool Building::isFull() const {
+    return getResidentCount() >= getCapacity();
+}
