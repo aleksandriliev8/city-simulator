@@ -78,10 +78,10 @@ int Date::getDay() const { return day; }
 int Date::getMonth() const { return month; }
 int Date::getYear() const { return year; }
 
-Date Date::addDays(int n) const {
-    long long ord = toOrdinalDay(day, month, year) + n;
+Date Date::addDays(int days) const {
+    long long ordinalDay = toOrdinalDay(day, month, year) + days;
     int newDay = 0, newMonth = 0, newYear = 0;
-    fromOrdinalDay(ord, newDay, newMonth, newYear);
+    fromOrdinalDay(ordinalDay, newDay, newMonth, newYear);
     return Date(newDay, newMonth, newYear);
 }
 

@@ -23,7 +23,7 @@ public:
     int getMonth() const;
     int getYear() const;
 
-    Date addDays(int n) const;
+    Date addDays(int days) const;
     bool isFirstOfMonth() const;
 
     bool operator==(const Date& other) const;

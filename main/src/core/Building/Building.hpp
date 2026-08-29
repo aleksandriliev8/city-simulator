@@ -24,7 +24,7 @@ public:
 
     int getRow() const;
     int getCol() const;
-    double getRent(int n, int m) const;
+    double getRent(int gridRows, int gridCols) const;
 
     bool addResident(Resident* resident);
     bool removeResident(const std::string& name);

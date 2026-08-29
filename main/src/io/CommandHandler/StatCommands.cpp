@@ -24,12 +24,12 @@ void StatCommands::handleStat(Simulation& simulation, const std::string& option)
                 Resident* resident = building->getResidents()[k];
                 count++;
                 if (option == "profession") {
-                    std::string prof = resident->getProfession()->getName();
-                    if (prof == "Teacher")         teachers++;
-                    else if (prof == "Programmer") programmers++;
-                    else if (prof == "Miner")      miners++;
-                    else if (prof == "Unemployed") unemployed++;
-                    else if (prof == "Student")    students++;
+                    std::string professionName = resident->getProfession()->getName();
+                    if (professionName == "Teacher")         teachers++;
+                    else if (professionName == "Programmer") programmers++;
+                    else if (professionName == "Miner")      miners++;
+                    else if (professionName == "Unemployed") unemployed++;
+                    else if (professionName == "Student")    students++;
                     continue;
                 }
                 int value = 0;
@@ -59,8 +59,8 @@ void StatCommands::handleStat(Simulation& simulation, const std::string& option)
         }
         double avg = (double)total / count;
         std::string avgStr = std::to_string(avg);
-        size_t dot = avgStr.find('.');
-        if (dot != std::string::npos && dot + 3 < avgStr.size()) avgStr = avgStr.substr(0, dot + 3);
+        size_t decimalPos = avgStr.find('.');
+        if (decimalPos != std::string::npos && decimalPos + 3 < avgStr.size()) avgStr = avgStr.substr(0, decimalPos + 3);
         paginator.addLine("Average: " + avgStr);
         paginator.addLine("Min:     " + std::to_string(min));
         paginator.addLine("Max:     " + std::to_string(max));
@@ -78,7 +78,7 @@ void StatCommands::handleStatBuildings(Simulation& simulation) {
     int modern = 0, panel = 0, dormitory = 0;
     int central = 0, peripheral = 0, standard = 0;
 
-    double minDim = (double)(city->getRows() < city->getCols() ? city->getRows() : city->getCols());
+    double minDimension = (double)(city->getRows() < city->getCols() ? city->getRows() : city->getCols());
     double centerRow = city->getRows() / 2.0;
     double centerCol = city->getCols() / 2.0;
 
@@ -91,8 +91,8 @@ void StatCommands::handleStatBuildings(Simulation& simulation) {
             else if (type == "Panel")     panel++;
             else if (type == "Dormitory") dormitory++;
             double distance = std::sqrt((i - centerRow) * (i - centerRow) + (j - centerCol) * (j - centerCol));
-            if (distance <= minDim / 8.0)            central++;
-            else if (distance > 6.0 * minDim / 8.0) peripheral++;
+            if (distance <= minDimension / 8.0)            central++;
+            else if (distance > 6.0 * minDimension / 8.0) peripheral++;
             else                                     standard++;
         }
     }

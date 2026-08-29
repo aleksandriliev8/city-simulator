@@ -67,12 +67,12 @@ void Simulation::generate(int rows, int cols) {
 
                 int residentCount = Random::randomInt(0, building->getCapacity() / 10);
                 for (int r = 0; r < residentCount; r++) {
-                    int profType = Random::randomInt(0, 4);
+                    int professionType = Random::randomInt(0, 4);
                     Profession* profession = nullptr;
-                    if (profType == 0) profession = new Teacher();
-                    else if (profType == 1) profession = new Programmer();
-                    else if (profType == 2) profession = new Miner();
-                    else if (profType == 3) profession = new Unemployed();
+                    if (professionType == 0) profession = new Teacher();
+                    else if (professionType == 1) profession = new Programmer();
+                    else if (professionType == 2) profession = new Miner();
+                    else if (professionType == 3) profession = new Unemployed();
                     else profession = new Student();
 
                     if (profession->getName() == "Student" && !building->canHouseStudent()) {
