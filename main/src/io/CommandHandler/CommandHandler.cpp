@@ -78,16 +78,12 @@ void CommandHandler::run() {
     std::cout << std::endl;
 
     // Auto-load: restore previous session if an autosave file exists
-    std::ifstream autoFile("data/autosave.dat", std::ios::binary);
-    if (autoFile.good()) {
-        autoFile.close();
-        try {
-            simulation.load("autosave");
-            UI::printSuccess("Auto-loaded previous simulation.");
-            UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
-        }
-        catch (...) {
-        }
+    try {
+        simulation.load("autosave");
+        UI::printSuccess("Auto-loaded previous simulation.");
+        UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
+    }
+    catch (...) {
     }
 
     std::string line;

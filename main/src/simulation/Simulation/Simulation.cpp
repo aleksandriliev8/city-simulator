@@ -15,7 +15,10 @@
 #include <string>
 
 static std::string loadRandomCityName() {
+    // Try multiple paths to find the file regardless of working directory
     std::ifstream file("assets/city_names.txt");
+    if (!file) file.open("../main/assets/city_names.txt");
+    if (!file) file.open("main/assets/city_names.txt");
     if (!file) {
         return "Unknown";
     }
