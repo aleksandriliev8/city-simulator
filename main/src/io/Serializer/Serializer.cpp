@@ -22,9 +22,9 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
     City* city = simulation.getCity();
 
     // write city name
-    int nameLen = (int)city->getName().size();
-    file.write((char*)&nameLen, sizeof(int));
-    file.write(city->getName().c_str(), nameLen);
+    int cityNameLen = (int)city->getName().size();
+    file.write((char*)&cityNameLen, sizeof(int));
+    file.write(city->getName().c_str(), cityNameLen);
 
     // write dimensions
     int rows = city->getRows();
@@ -53,16 +53,16 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
         for (int j = 0; j < cols; j++) {
             Building* building = city->getBuilding(i, j);
             if (building == nullptr) {
-                int type = -1;
-                file.write((char*)&type, sizeof(int));
+                int emptyMarker = -1;
+                file.write((char*)&emptyMarker, sizeof(int));
                 continue;
             }
 
             // write building type
-            std::string type = building->getType();
-            int typeLen = (int)type.size();
-            file.write((char*)&typeLen, sizeof(int));
-            file.write(type.c_str(), typeLen);
+            std::string buildingType = building->getType();
+            int buildingTypeLen = (int)buildingType.size();
+            file.write((char*)&buildingTypeLen, sizeof(int));
+            file.write(buildingType.c_str(), buildingTypeLen);
 
             // write residents
             int residentCount = building->getResidentCount();
@@ -72,15 +72,15 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
                 Resident* resident = building->getResidents()[k];
 
                 // write name
-                int resNameLen = (int)resident->getName().size();
-                file.write((char*)&resNameLen, sizeof(int));
-                file.write(resident->getName().c_str(), resNameLen);
+                int residentNameLen = (int)resident->getName().size();
+                file.write((char*)&residentNameLen, sizeof(int));
+                file.write(resident->getName().c_str(), residentNameLen);
 
                 // write profession
-                std::string profName = resident->getProfession()->getName();
-                int profNameLen = (int)profName.size();
-                file.write((char*)&profNameLen, sizeof(int));
-                file.write(profName.c_str(), profNameLen);
+                std::string professionName = resident->getProfession()->getName();
+                int professionNameLen = (int)professionName.size();
+                file.write((char*)&professionNameLen, sizeof(int));
+                file.write(professionName.c_str(), professionNameLen);
 
                 // write characteristics
                 int happiness = resident->getHappiness();
@@ -101,10 +101,10 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
                     file.write((char*)&entryDay, sizeof(int));
                     file.write((char*)&entryMonth, sizeof(int));
                     file.write((char*)&entryYear, sizeof(int));
-                    std::string desc = entry.getDescription();
-                    int descLen = (int)desc.size();
-                    file.write((char*)&descLen, sizeof(int));
-                    file.write(desc.c_str(), descLen);
+                    std::string description = entry.getDescription();
+                    int descriptionLen = (int)description.size();
+                    file.write((char*)&descriptionLen, sizeof(int));
+                    file.write(description.c_str(), descriptionLen);
                 }
             }
         }
@@ -121,10 +121,10 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
         file.write((char*)&entryDay, sizeof(int));
         file.write((char*)&entryMonth, sizeof(int));
         file.write((char*)&entryYear, sizeof(int));
-        std::string desc = entry.getDescription();
-        int descLen = (int)desc.size();
-        file.write((char*)&descLen, sizeof(int));
-        file.write(desc.c_str(), descLen);
+        std::string description = entry.getDescription();
+        int descriptionLen = (int)description.size();
+        file.write((char*)&descriptionLen, sizeof(int));
+        file.write(description.c_str(), descriptionLen);
     }
 
     if (!file) {
@@ -138,11 +138,19 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         throw std::runtime_error("Could not open file: " + filename);
     }
 
+    // Guard against corrupted/malicious files: all string lengths must be in [0, 10000]
+    auto validateLen = [&](int len, const std::string& what) {
+        if (len < 0 || len > 10000) {
+            throw std::runtime_error("Corrupted file: invalid " + what + " length in " + filename);
+        }
+    };
+
     // read city name
-    int nameLen;
-    file.read((char*)&nameLen, sizeof(int));
-    std::string name(nameLen, '\0');
-    file.read(&name[0], nameLen);
+    int cityNameLen;
+    file.read((char*)&cityNameLen, sizeof(int));
+    validateLen(cityNameLen, "city name");
+    std::string name(cityNameLen, '\0');
+    file.read(&name[0], cityNameLen);
 
     // read dimensions
     int rows, cols;
@@ -171,43 +179,49 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         // read matrix
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                int typeLen;
-                file.read((char*)&typeLen, sizeof(int));
-                if (typeLen == -1) continue;
+                int buildingTypeLen;
+                file.read((char*)&buildingTypeLen, sizeof(int));
+                if (buildingTypeLen == -1) continue;
+                validateLen(buildingTypeLen, "building type");
 
-                std::string type(typeLen, '\0');
-                file.read(&type[0], typeLen);
+                std::string buildingType(buildingTypeLen, '\0');
+                file.read(&buildingType[0], buildingTypeLen);
 
                 Building* building = nullptr;
-                if (type == "Modern")         building = new ModernBuilding(i, j);
-                else if (type == "Panel")     building = new PanelBuilding(i, j);
-                else if (type == "Dormitory") building = new Dormitory(i, j);
+                if (buildingType == "Modern")         building = new ModernBuilding(i, j);
+                else if (buildingType == "Panel")     building = new PanelBuilding(i, j);
+                else if (buildingType == "Dormitory") building = new Dormitory(i, j);
                 else throw std::runtime_error("Unknown building type in file: " + filename);
 
                 city->setBuilding(i, j, building);
 
                 int residentCount;
                 file.read((char*)&residentCount, sizeof(int));
+                if (residentCount < 0 || residentCount > 10000) {
+                    throw std::runtime_error("Corrupted file: invalid resident count in " + filename);
+                }
 
                 for (int k = 0; k < residentCount; k++) {
                     // read name
-                    int resNameLen;
-                    file.read((char*)&resNameLen, sizeof(int));
-                    std::string resName(resNameLen, '\0');
-                    file.read(&resName[0], resNameLen);
+                    int residentNameLen;
+                    file.read((char*)&residentNameLen, sizeof(int));
+                    validateLen(residentNameLen, "resident name");
+                    std::string residentName(residentNameLen, '\0');
+                    file.read(&residentName[0], residentNameLen);
 
                     // read profession
-                    int profNameLen;
-                    file.read((char*)&profNameLen, sizeof(int));
-                    std::string profName(profNameLen, '\0');
-                    file.read(&profName[0], profNameLen);
+                    int professionNameLen;
+                    file.read((char*)&professionNameLen, sizeof(int));
+                    validateLen(professionNameLen, "profession name");
+                    std::string professionName(professionNameLen, '\0');
+                    file.read(&professionName[0], professionNameLen);
 
                     Profession* profession = nullptr;
-                    if (profName == "Teacher")         profession = new Teacher();
-                    else if (profName == "Programmer") profession = new Programmer();
-                    else if (profName == "Miner")      profession = new Miner();
-                    else if (profName == "Unemployed") profession = new Unemployed();
-                    else if (profName == "Student")    profession = new Student();
+                    if (professionName == "Teacher")         profession = new Teacher();
+                    else if (professionName == "Programmer") profession = new Programmer();
+                    else if (professionName == "Miner")      profession = new Miner();
+                    else if (professionName == "Unemployed") profession = new Unemployed();
+                    else if (professionName == "Student")    profession = new Student();
                     else throw std::runtime_error("Unknown profession in file: " + filename);
 
                     // read characteristics
@@ -216,21 +230,30 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                     file.read((char*)&money, sizeof(int));
                     file.read((char*)&life, sizeof(int));
 
-                    Resident* resident = new Resident(resName, profession, happiness, money, life);
+                    // Constructor clamps values; re-apply via setters to restore exact saved values
+                    Resident* resident = new Resident(residentName, profession, happiness, money, life);
+                    resident->setHappiness(happiness);
+                    resident->setMoney(money);
+                    resident->setLife(life);
 
                     // read history
                     int historySize;
                     file.read((char*)&historySize, sizeof(int));
+                    if (historySize < 0 || historySize > 100000) {
+                        delete resident;
+                        throw std::runtime_error("Corrupted file: invalid history size in " + filename);
+                    }
                     for (int h = 0; h < historySize; h++) {
                         int entryDay, entryMonth, entryYear;
                         file.read((char*)&entryDay, sizeof(int));
                         file.read((char*)&entryMonth, sizeof(int));
                         file.read((char*)&entryYear, sizeof(int));
-                        int descLen;
-                        file.read((char*)&descLen, sizeof(int));
-                        std::string desc(descLen, '\0');
-                        file.read(&desc[0], descLen);
-                        resident->addHistoryEntry(Date(entryDay, entryMonth, entryYear), desc);
+                        int descriptionLen;
+                        file.read((char*)&descriptionLen, sizeof(int));
+                        validateLen(descriptionLen, "history description");
+                        std::string description(descriptionLen, '\0');
+                        file.read(&description[0], descriptionLen);
+                        resident->addHistoryEntry(Date(entryDay, entryMonth, entryYear), description);
                     }
 
                     building->addResident(resident);
@@ -241,18 +264,19 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         // read city history (optional — old save files may not have it)
         int cityHistorySize = 0;
         file.read((char*)&cityHistorySize, sizeof(int));
-        if (file.good() && cityHistorySize > 0) {
+        if (file.good() && cityHistorySize > 0 && cityHistorySize < 100000) {
             for (int h = 0; h < cityHistorySize; h++) {
                 int entryDay, entryMonth, entryYear;
                 file.read((char*)&entryDay, sizeof(int));
                 file.read((char*)&entryMonth, sizeof(int));
                 file.read((char*)&entryYear, sizeof(int));
-                int descLen;
-                file.read((char*)&descLen, sizeof(int));
-                std::string desc(descLen, '\0');
-                file.read(&desc[0], descLen);
+                int descriptionLen;
+                file.read((char*)&descriptionLen, sizeof(int));
+                if (descriptionLen < 0 || descriptionLen > 10000) break;
+                std::string description(descriptionLen, '\0');
+                file.read(&description[0], descriptionLen);
                 if (!file.good()) break;
-                city->addHistoryEntry(Date(entryDay, entryMonth, entryYear), desc);
+                city->addHistoryEntry(Date(entryDay, entryMonth, entryYear), description);
             }
         }
         file.clear();

@@ -7,6 +7,17 @@ void SimCommands::handleGenerate(Simulation& simulation, int rows, int cols) {
         UI::printError(error);
         return;
     }
+    if (simulation.hasCity() && simulation.isUnsaved()) {
+        UI::printWarning("You have unsaved changes. Save before generating? (y/n):");
+        std::string answer;
+        std::getline(std::cin, answer);
+        if (answer == "y" || answer == "Y") {
+            std::cout << "Enter filename: ";
+            std::string filename;
+            std::getline(std::cin, filename);
+            handleSave(simulation, filename);
+        }
+    }
     simulation.generate(rows, cols);
     UI::printCityCreated(simulation.getCity()->getName(), simulation.getCity()->getCurrentDate().toString());
 }
@@ -47,6 +58,10 @@ void SimCommands::handleStep(Simulation& simulation, int days) {
         UI::printError("No active simulation.");
         return;
     }
+    if (days == 0) {
+        UI::printError("Step count must be non-zero.");
+        return;
+    }
     try {
         int zeroHappiness = 0, zeroLife = 0, zeroMoney = 0;
         simulation.step(days, zeroHappiness, zeroLife, zeroMoney);
@@ -59,6 +74,10 @@ void SimCommands::handleStep(Simulation& simulation, int days) {
 }
 
 void SimCommands::handleSave(Simulation& simulation, const std::string& filename) {
+    if (!simulation.hasCity()) {
+        UI::printError("No active simulation.");
+        return;
+    }
     try {
         simulation.save(filename);
         UI::printSuccess("Simulation saved to '" + filename + "'.");
@@ -69,6 +88,17 @@ void SimCommands::handleSave(Simulation& simulation, const std::string& filename
 }
 
 void SimCommands::handleLoad(Simulation& simulation, const std::string& filename) {
+    if (simulation.hasCity() && simulation.isUnsaved()) {
+        UI::printWarning("You have unsaved changes. Save before loading? (y/n):");
+        std::string answer;
+        std::getline(std::cin, answer);
+        if (answer == "y" || answer == "Y") {
+            std::cout << "Enter filename: ";
+            std::string saveName;
+            std::getline(std::cin, saveName);
+            handleSave(simulation, saveName);
+        }
+    }
     try {
         simulation.load(filename);
         UI::printSuccess("Simulation '" + filename + "' loaded.");

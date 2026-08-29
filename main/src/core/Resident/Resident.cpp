@@ -72,6 +72,7 @@ void Resident::addHistoryEntry(const Date& date, const std::string& description)
     history.push_back(HistoryEntry(date, description));
 }
 
+// Called on the 1st of each month: receive salary and apply profession-specific effects
 void Resident::applyMonthlyEffects(const Date& date) {
     int salary = profession->generateSalary();
     money += salary;
@@ -79,6 +80,7 @@ void Resident::applyMonthlyEffects(const Date& date) {
     profession->applyMonthlyEffect(*this);
 }
 
+// Monthly rent payment. Failure penalty: -10 happiness, -10 life
 void Resident::payRent(int rent, const Date& date) {
     if (money >= rent) {
         money -= rent;
@@ -91,6 +93,7 @@ void Resident::payRent(int rent, const Date& date) {
     }
 }
 
+// Daily food cost: 50 EUR. Failure penalty: -5 happiness, -5 life
 void Resident::payFood(const Date& date) {
     if (money >= 50) {
         money -= 50;

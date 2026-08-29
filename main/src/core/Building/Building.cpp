@@ -41,16 +41,18 @@ int Building::getCol() const {
     return col;
 }
 
-double Building::getRent(int n, int m) const {
-    double centerRow = n / 2.0;
-    double centerCol = m / 2.0;
+// Location-based rent: Euclidean distance from grid center determines the zone.
+// Central (dist <= min(n,m)/8): x2.5, Peripheral (dist > 6*min(n,m)/8): x0.8, Standard: x1.0
+double Building::getRent(int gridRows, int gridCols) const {
+    double centerRow = gridRows / 2.0;
+    double centerCol = gridCols / 2.0;
     double distance = std::sqrt((row - centerRow) * (row - centerRow) + (col - centerCol) * (col - centerCol));
-    double minDim = (double)(n < m ? n : m);
+    double minDimension = (double)(gridRows < gridCols ? gridRows : gridCols);
 
-    if (distance <= minDim / 8.0) {
+    if (distance <= minDimension / 8.0) {
         return getBaseRent() * 2.5;
     }
-    else if (distance > 6.0 * minDim / 8.0) {
+    else if (distance > 6.0 * minDimension / 8.0) {
         return getBaseRent() * 0.8;
     }
     return getBaseRent();

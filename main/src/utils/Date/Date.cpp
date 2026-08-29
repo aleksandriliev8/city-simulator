@@ -36,8 +36,8 @@ void Date::validate(int day, int month, int year) {
     }
 }
 
-// JuilanDay algorithm invented by Fliegel and Van Flandern
-
+// Julian Day Number algorithm by Fliegel & Van Flandern (1968)
+// Converts a calendar date to a continuous day count for arithmetic
 long long Date::toOrdinalDay(int day, int month, int year) {
     long long a = (14 - month) / 12;
     long long y = year + 4800 - a;
@@ -45,8 +45,7 @@ long long Date::toOrdinalDay(int day, int month, int year) {
     return day + (153 * m + 2) / 5 + 365 * y + y / 4 - y / 100 + y / 400 - 32045;
 }
 
-// JuilanDay algorithm invented by Fliegel and Van Flandern
-
+// Inverse: converts Julian Day Number back to calendar date
 void Date::fromOrdinalDay(long long ord, int& day, int& month, int& year) {
     long long a = ord + 32044;
     long long b = (4 * a + 3) / 146097;
@@ -78,10 +77,10 @@ int Date::getDay() const { return day; }
 int Date::getMonth() const { return month; }
 int Date::getYear() const { return year; }
 
-Date Date::addDays(int n) const {
-    long long ord = toOrdinalDay(day, month, year) + n;
+Date Date::addDays(int days) const {
+    long long ordinalDay = toOrdinalDay(day, month, year) + days;
     int newDay = 0, newMonth = 0, newYear = 0;
-    fromOrdinalDay(ord, newDay, newMonth, newYear);
+    fromOrdinalDay(ordinalDay, newDay, newMonth, newYear);
     return Date(newDay, newMonth, newYear);
 }
 

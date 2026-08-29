@@ -67,12 +67,12 @@ void Simulation::generate(int rows, int cols) {
 
                 int residentCount = Random::randomInt(0, building->getCapacity() / 10);
                 for (int r = 0; r < residentCount; r++) {
-                    int profType = Random::randomInt(0, 4);
+                    int professionType = Random::randomInt(0, 4);
                     Profession* profession = nullptr;
-                    if (profType == 0) profession = new Teacher();
-                    else if (profType == 1) profession = new Programmer();
-                    else if (profType == 2) profession = new Miner();
-                    else if (profType == 3) profession = new Unemployed();
+                    if (professionType == 0) profession = new Teacher();
+                    else if (professionType == 1) profession = new Programmer();
+                    else if (professionType == 2) profession = new Miner();
+                    else if (professionType == 3) profession = new Unemployed();
                     else profession = new Student();
 
                     if (profession->getName() == "Student" && !building->canHouseStudent()) {
@@ -112,6 +112,9 @@ City* Simulation::findSnapshot(const Date& date) const {
     return nullptr;
 }
 
+// Advances (or rewinds) the simulation by the given number of days.
+// Forward: saves a snapshot, then simulates each day (salary on 1st, rent on 1st, food daily).
+// Backward: restores from a previously saved snapshot (time-travel).
 void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMoney) {
     if (!hasCity()) {
         throw std::runtime_error("No active simulation");
@@ -130,14 +133,26 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
     if (days < 0) {
         City* snapshot = findSnapshot(targetDate);
         if (snapshot == nullptr) {
-            throw std::invalid_argument("No snapshot found for that date");
+            std::string msg = "No snapshot found for " + targetDate.toString() + ".";
+            if (snapshots.empty()) {
+                msg += " No snapshots available (use 'step' forward first).";
+            }
+            else {
+                msg += " Available dates:";
+                for (int i = 0; i < (int)snapshots.size(); i++) {
+                    msg += " " + snapshots[i]->getCurrentDate().toString();
+                }
+            }
+            throw std::invalid_argument(msg);
         }
         delete city;
         city = new City(*snapshot);
     }
     else {
+        // Save current state before simulating (enables future step-back)
         snapshots.push_back(new City(*city));
 
+        // Day-by-day simulation loop
         for (int d = 0; d < days; d++) {
             city->advanceDate(1);
 

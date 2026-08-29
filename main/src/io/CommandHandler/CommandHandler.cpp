@@ -1,62 +1,63 @@
 #include "CommandHandler.hpp"
 #include "../../utils/StringUtils/StringUtils.hpp"
 #include <iostream>
+#include <fstream>
 
 CommandHandler::CommandHandler(Simulation& simulation) : simulation(simulation) {
 }
 
 bool CommandHandler::parseAndExecute(const std::string& line) {
-    std::vector<std::string> t = StringUtils::tokenize(line);
-    if (t.empty()) return true;
+    std::vector<std::string> tokens = StringUtils::tokenize(line);
+    if (tokens.empty()) return true;
 
-    const std::string& command = t[0];
+    const std::string& command = tokens[0];
 
     if (command == "generate") {
-        if (t.size() != 3) { UI::printError("Usage: generate <n> <m>"); return true; }
-        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Dimensions must be integers."); return true; }
-        SimCommands::handleGenerate(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]));
+        if (tokens.size() != 3) { UI::printError("Usage: generate <n> <m>"); return true; }
+        if (!StringUtils::isInt(tokens[1]) || !StringUtils::isInt(tokens[2])) { UI::printError("Dimensions must be integers."); return true; }
+        SimCommands::handleGenerate(simulation, StringUtils::toInt(tokens[1]), StringUtils::toInt(tokens[2]));
     }
     else if (command == "add") {
-        if (t.size() != 8) { UI::printError("Usage: add <n> <m> <name> <job> <happiness> <money> <life>"); return true; }
-        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2]) || !StringUtils::isInt(t[5]) || !StringUtils::isInt(t[6]) || !StringUtils::isInt(t[7])) {
+        if (tokens.size() != 8) { UI::printError("Usage: add <n> <m> <name> <job> <happiness> <money> <life>"); return true; }
+        if (!StringUtils::isInt(tokens[1]) || !StringUtils::isInt(tokens[2]) || !StringUtils::isInt(tokens[5]) || !StringUtils::isInt(tokens[6]) || !StringUtils::isInt(tokens[7])) {
             UI::printError("Coordinates and characteristics must be integers."); return true;
         }
-        SimCommands::handleAdd(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3], t[4], StringUtils::toInt(t[5]), StringUtils::toInt(t[6]), StringUtils::toInt(t[7]));
+        SimCommands::handleAdd(simulation, StringUtils::toInt(tokens[1]), StringUtils::toInt(tokens[2]), tokens[3], tokens[4], StringUtils::toInt(tokens[5]), StringUtils::toInt(tokens[6]), StringUtils::toInt(tokens[7]));
     }
     else if (command == "remove") {
-        if (t.size() != 4) { UI::printError("Usage: remove <n> <m> <name>"); return true; }
-        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
-        SimCommands::handleRemove(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3]);
+        if (tokens.size() != 4) { UI::printError("Usage: remove <n> <m> <name>"); return true; }
+        if (!StringUtils::isInt(tokens[1]) || !StringUtils::isInt(tokens[2])) { UI::printError("Coordinates must be integers."); return true; }
+        SimCommands::handleRemove(simulation, StringUtils::toInt(tokens[1]), StringUtils::toInt(tokens[2]), tokens[3]);
     }
     else if (command == "step") {
-        if (t.size() > 1 && !StringUtils::isInt(t[1])) { UI::printError("Step count must be an integer."); return true; }
-        int days = t.size() > 1 ? StringUtils::toInt(t[1]) : 1;
+        if (tokens.size() > 1 && !StringUtils::isInt(tokens[1])) { UI::printError("Step count must be an integer."); return true; }
+        int days = tokens.size() > 1 ? StringUtils::toInt(tokens[1]) : 1;
         SimCommands::handleStep(simulation, days);
     }
     else if (command == "info") {
-        if (t.size() == 1)      InfoCommands::handleInfo(simulation);
-        else if (t.size() == 3) {
-            if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
-            InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]));
+        if (tokens.size() == 1)      InfoCommands::handleInfo(simulation);
+        else if (tokens.size() == 3) {
+            if (!StringUtils::isInt(tokens[1]) || !StringUtils::isInt(tokens[2])) { UI::printError("Coordinates must be integers."); return true; }
+            InfoCommands::handleInfo(simulation, StringUtils::toInt(tokens[1]), StringUtils::toInt(tokens[2]));
         }
-        else if (t.size() == 4) {
-            if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
-            InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3]);
+        else if (tokens.size() == 4) {
+            if (!StringUtils::isInt(tokens[1]) || !StringUtils::isInt(tokens[2])) { UI::printError("Coordinates must be integers."); return true; }
+            InfoCommands::handleInfo(simulation, StringUtils::toInt(tokens[1]), StringUtils::toInt(tokens[2]), tokens[3]);
         }
         else UI::printError("Usage: info | info <x> <y> | info <x> <y> <name>");
     }
     else if (command == "stat") {
-        if (t.size() != 2) { UI::printError("Usage: stat <happiness|money|life|profession|buildings>"); return true; }
-        if (t[1] == "buildings") StatCommands::handleStatBuildings(simulation);
-        else                     StatCommands::handleStat(simulation, t[1]);
+        if (tokens.size() != 2) { UI::printError("Usage: stat <happiness|money|life|profession|buildings>"); return true; }
+        if (tokens[1] == "buildings") StatCommands::handleStatBuildings(simulation);
+        else                     StatCommands::handleStat(simulation, tokens[1]);
     }
     else if (command == "save") {
-        if (t.size() != 2) { UI::printError("Usage: save <name>"); return true; }
-        SimCommands::handleSave(simulation, t[1]);
+        if (tokens.size() != 2) { UI::printError("Usage: save <name>"); return true; }
+        SimCommands::handleSave(simulation, tokens[1]);
     }
     else if (command == "load") {
-        if (t.size() != 2) { UI::printError("Usage: load <name>"); return true; }
-        SimCommands::handleLoad(simulation, t[1]);
+        if (tokens.size() != 2) { UI::printError("Usage: load <name>"); return true; }
+        SimCommands::handleLoad(simulation, tokens[1]);
     }
     else if (command == "help") {
         UI::printHelp();
@@ -75,6 +76,19 @@ void CommandHandler::run() {
     UI::printHeader();
     UI::printHelp();
     std::cout << std::endl;
+
+    // Auto-load: restore previous session if an autosave file exists
+    std::ifstream autoFile("data/autosave.dat", std::ios::binary);
+    if (autoFile.good()) {
+        autoFile.close();
+        try {
+            simulation.load("autosave");
+            UI::printSuccess("Auto-loaded previous simulation.");
+            UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
+        }
+        catch (...) {
+        }
+    }
 
     std::string line;
     while (true) {
@@ -95,6 +109,15 @@ void CommandHandler::run() {
                 }
             }
             break;
+        }
+    }
+
+    // Auto-save: persist current state for next session
+    if (simulation.hasCity()) {
+        try {
+            simulation.save("autosave");
+        }
+        catch (...) {
         }
     }
 }

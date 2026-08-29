@@ -2,6 +2,7 @@
 
 #include "../../core/Building/Building.hpp"
 
+// Rent: 67, Capacity: 200, Students: only students allowed
 class Dormitory : public Building {
 public:
     Dormitory(int row, int col);

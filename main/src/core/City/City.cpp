@@ -15,6 +15,7 @@ City::~City() {
     deallocateMatrix();
 }
 
+// Deep copy: each building is cloned polymorphically (Building::clone())
 City::City(const City& other)
     : name(other.name), history(other.history),
     startDate(other.startDate), currentDate(other.currentDate),

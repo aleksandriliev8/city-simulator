@@ -6,10 +6,13 @@
 #include "../HistoryEntry/HistoryEntry.hpp"
 #include "../../utils/Date/Date.hpp"
 
+// Represents the city as a 2D matrix of Building pointers.
+// Owns all Building objects. Implements Rule of Three with deep copy
+// via Building::clone(). Tracks simulation dates and event history.
 class City {
 private:
     std::string name;
-    std::vector<std::vector<Building*>> matrix;
+    std::vector<std::vector<Building*>> matrix;  // rows x cols grid of buildings (nullptr = empty cell)
     std::vector<HistoryEntry> history;
     Date startDate;
     Date currentDate;
