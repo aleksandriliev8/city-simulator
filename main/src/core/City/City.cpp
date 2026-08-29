@@ -16,7 +16,7 @@ City::~City() {
 }
 
 City::City(const City& other)
-    : name(other.name), history(other.history), // CHANGED: added history
+    : name(other.name), history(other.history),
     startDate(other.startDate), currentDate(other.currentDate),
     rows(other.rows), cols(other.cols) {
     allocateMatrix();
@@ -42,7 +42,7 @@ City& City::operator=(const City& other) {
         deallocateMatrix();
         matrix = newMatrix;
         name = other.name;
-        history = other.history; // CHANGED: added history
+        history = other.history;
         rows = other.rows;
         cols = other.cols;
         startDate = other.startDate;

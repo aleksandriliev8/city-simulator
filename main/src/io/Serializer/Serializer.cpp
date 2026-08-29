@@ -148,82 +148,89 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
     file.read((char*)&curMonth, sizeof(int));
     file.read((char*)&curYear, sizeof(int));
 
-City* city = new City(name, rows, cols, Date(startDay, startMonth, startYear), Date(curDay, curMonth, curYear));
-simulation.setCity(city);
+    City* city = new City(name, rows, cols, Date(startDay, startMonth, startYear), Date(curDay, curMonth, curYear));
 
-    // read matrix
-    for (int i = 0; i < rows; i++) {
-        for (int j = 0; j < cols; j++) {
-            int typeLen;
-            file.read((char*)&typeLen, sizeof(int));
-            if (typeLen == -1) {
-                continue;
-            }
+    try {
+        simulation.setCity(city);
 
-            std::string type(typeLen, '\0');
-            file.read(&type[0], typeLen);
+        // read matrix
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                int typeLen;
+                file.read((char*)&typeLen, sizeof(int));
+                if (typeLen == -1) continue;
 
-            Building* building = nullptr;
-            if (type == "Modern") building = new ModernBuilding(i, j);
-            else if (type == "Panel") building = new PanelBuilding(i, j);
-            else if (type == "Dormitory") building = new Dormitory(i, j);
-            else throw std::runtime_error("Unknown building type in file: " + filename);
+                std::string type(typeLen, '\0');
+                file.read(&type[0], typeLen);
 
-            city->setBuilding(i, j, building);
+                Building* building = nullptr;
+                if (type == "Modern")         building = new ModernBuilding(i, j);
+                else if (type == "Panel")     building = new PanelBuilding(i, j);
+                else if (type == "Dormitory") building = new Dormitory(i, j);
+                else throw std::runtime_error("Unknown building type in file: " + filename);
 
-            int residentCount;
-            file.read((char*)&residentCount, sizeof(int));
+                city->setBuilding(i, j, building);
 
-            for (int k = 0; k < residentCount; k++) {
-                // read name
-                int resNameLen;
-                file.read((char*)&resNameLen, sizeof(int));
-                std::string resName(resNameLen, '\0');
-                file.read(&resName[0], resNameLen);
+                int residentCount;
+                file.read((char*)&residentCount, sizeof(int));
 
-                // read profession
-                int profNameLen;
-                file.read((char*)&profNameLen, sizeof(int));
-                std::string profName(profNameLen, '\0');
-                file.read(&profName[0], profNameLen);
+                for (int k = 0; k < residentCount; k++) {
+                    // read name
+                    int resNameLen;
+                    file.read((char*)&resNameLen, sizeof(int));
+                    std::string resName(resNameLen, '\0');
+                    file.read(&resName[0], resNameLen);
 
-                Profession* profession = nullptr;
-                if (profName == "Teacher") profession = new Teacher();
-                else if (profName == "Programmer") profession = new Programmer();
-                else if (profName == "Miner") profession = new Miner();
-                else if (profName == "Unemployed") profession = new Unemployed();
-                else if (profName == "Student") profession = new Student();
-                else throw std::runtime_error("Unknown profession in file: " + filename);
+                    // read profession
+                    int profNameLen;
+                    file.read((char*)&profNameLen, sizeof(int));
+                    std::string profName(profNameLen, '\0');
+                    file.read(&profName[0], profNameLen);
 
-                // read characteristics
-                int happiness, money, life;
-                file.read((char*)&happiness, sizeof(int));
-                file.read((char*)&money, sizeof(int));
-                file.read((char*)&life, sizeof(int));
+                    Profession* profession = nullptr;
+                    if (profName == "Teacher")         profession = new Teacher();
+                    else if (profName == "Programmer") profession = new Programmer();
+                    else if (profName == "Miner")      profession = new Miner();
+                    else if (profName == "Unemployed") profession = new Unemployed();
+                    else if (profName == "Student")    profession = new Student();
+                    else throw std::runtime_error("Unknown profession in file: " + filename);
 
-                Resident* resident = new Resident(resName, profession, happiness, money, life);
+                    // read characteristics
+                    int happiness, money, life;
+                    file.read((char*)&happiness, sizeof(int));
+                    file.read((char*)&money, sizeof(int));
+                    file.read((char*)&life, sizeof(int));
 
-                // read history
-                int historySize;
-                file.read((char*)&historySize, sizeof(int));
-                for (int h = 0; h < historySize; h++) {
-                    int entryDay, entryMonth, entryYear;
-                    file.read((char*)&entryDay, sizeof(int));
-                    file.read((char*)&entryMonth, sizeof(int));
-                    file.read((char*)&entryYear, sizeof(int));
-                    int descLen;
-                    file.read((char*)&descLen, sizeof(int));
-                    std::string desc(descLen, '\0');
-                    file.read(&desc[0], descLen);
-                    resident->addHistoryEntry(Date(entryDay, entryMonth, entryYear), desc);
+                    Resident* resident = new Resident(resName, profession, happiness, money, life);
+
+                    // read history
+                    int historySize;
+                    file.read((char*)&historySize, sizeof(int));
+                    for (int h = 0; h < historySize; h++) {
+                        int entryDay, entryMonth, entryYear;
+                        file.read((char*)&entryDay, sizeof(int));
+                        file.read((char*)&entryMonth, sizeof(int));
+                        file.read((char*)&entryYear, sizeof(int));
+                        int descLen;
+                        file.read((char*)&descLen, sizeof(int));
+                        std::string desc(descLen, '\0');
+                        file.read(&desc[0], descLen);
+                        resident->addHistoryEntry(Date(entryDay, entryMonth, entryYear), desc);
+                    }
+
+                    building->addResident(resident);
                 }
-
-                building->addResident(resident);
             }
         }
-    }
 
-    if (!file) {
-        throw std::runtime_error("Error reading file: " + filename);
+        if (!file) {
+            throw std::runtime_error("Error reading file: " + filename);
+        }
+
+    }
+    catch (...) {
+        delete city;
+        simulation.setCity(nullptr);
+        throw;
     }
 }
