@@ -77,6 +77,7 @@ void CommandHandler::run() {
     UI::printHelp();
     std::cout << std::endl;
 
+    // Auto-load: restore previous session if an autosave file exists
     std::ifstream autoFile("data/autosave.dat", std::ios::binary);
     if (autoFile.good()) {
         autoFile.close();
@@ -111,6 +112,7 @@ void CommandHandler::run() {
         }
     }
 
+    // Auto-save: persist current state for next session
     if (simulation.hasCity()) {
         try {
             simulation.save("autosave");

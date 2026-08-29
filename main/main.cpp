@@ -1,3 +1,6 @@
+// City Simulation — OOP Course Project
+// Entry point: initializes RNG, creates the simulation engine, and starts the REPL.
+
 #include "src/simulation/Simulation/Simulation.hpp"
 #include "src/io/CommandHandler/CommandHandler.hpp"
 #include "src/utils/Random/Random.hpp"

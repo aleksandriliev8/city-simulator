@@ -112,6 +112,9 @@ City* Simulation::findSnapshot(const Date& date) const {
     return nullptr;
 }
 
+// Advances (or rewinds) the simulation by the given number of days.
+// Forward: saves a snapshot, then simulates each day (salary on 1st, rent on 1st, food daily).
+// Backward: restores from a previously saved snapshot (time-travel).
 void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMoney) {
     if (!hasCity()) {
         throw std::runtime_error("No active simulation");
@@ -146,8 +149,10 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
         city = new City(*snapshot);
     }
     else {
+        // Save current state before simulating (enables future step-back)
         snapshots.push_back(new City(*city));
 
+        // Day-by-day simulation loop
         for (int d = 0; d < days; d++) {
             city->advanceDate(1);
 

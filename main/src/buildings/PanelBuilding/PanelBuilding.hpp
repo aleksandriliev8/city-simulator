@@ -2,6 +2,7 @@
 
 #include "../../core/Building/Building.hpp"
 
+// Rent: 500, Capacity: 100, Students: not allowed
 class PanelBuilding : public Building {
 public:
     PanelBuilding(int row, int col);

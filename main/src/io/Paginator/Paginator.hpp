@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 
+// Displays output in pages of N lines. User presses Enter for next page, 'q' to quit.
 class Paginator {
 private:
     std::vector<std::string> lines;

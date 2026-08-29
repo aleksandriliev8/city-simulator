@@ -138,6 +138,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         throw std::runtime_error("Could not open file: " + filename);
     }
 
+    // Guard against corrupted/malicious files: all string lengths must be in [0, 10000]
     auto validateLen = [&](int len, const std::string& what) {
         if (len < 0 || len > 10000) {
             throw std::runtime_error("Corrupted file: invalid " + what + " length in " + filename);
@@ -229,6 +230,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                     file.read((char*)&money, sizeof(int));
                     file.read((char*)&life, sizeof(int));
 
+                    // Constructor clamps values; re-apply via setters to restore exact saved values
                     Resident* resident = new Resident(residentName, profession, happiness, money, life);
                     resident->setHappiness(happiness);
                     resident->setMoney(money);

@@ -4,6 +4,8 @@
 
 class Resident;
 
+// Abstract base class for professions. New professions are added by subclassing.
+// Each profession defines its own salary range and monthly effect on the resident.
 class Profession {
 public:
     virtual std::string getName() const = 0;

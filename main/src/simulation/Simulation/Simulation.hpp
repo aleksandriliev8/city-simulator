@@ -4,10 +4,13 @@
 #include <vector>
 #include "../../core/City/City.hpp"
 
+// Core simulation engine. Manages the current city state and provides
+// time-travel via snapshots (deep copies stored before each forward step).
+// Non-copyable — only one simulation instance exists at a time.
 class Simulation {
 private:
     City* city;
-    std::vector<City*> snapshots;
+    std::vector<City*> snapshots;  // saved city states for stepping backwards
     bool hasUnsavedChanges;
 
 private:

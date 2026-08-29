@@ -2,6 +2,8 @@
 
 #include <string>
 
+// Immutable date class with calendar arithmetic via the Julian Day algorithm.
+// Default constructor initializes to today's system date.
 class Date {
 private:
     int day;
@@ -12,6 +14,7 @@ private:
     static int daysInMonth(int month, int year);
     static void validate(int day, int month, int year);
 
+    // Julian Day conversions for efficient date arithmetic (addDays, comparisons)
     static long long toOrdinalDay(int day, int month, int year);
     static void fromOrdinalDay(long long ord, int& day, int& month, int& year);
 
