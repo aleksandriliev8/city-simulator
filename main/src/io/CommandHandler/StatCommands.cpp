@@ -13,7 +13,7 @@ void StatCommands::handleStat(Simulation& simulation, const std::string& option)
     }
 
     City* city = simulation.getCity();
-    int total = 0, min = 101, max = -1, count = 0;
+    int total = 0, min = 2000000000, max = -1, count = 0;
     int teachers = 0, programmers = 0, miners = 0, unemployed = 0, students = 0;
 
     for (int i = 0; i < city->getRows(); i++) {

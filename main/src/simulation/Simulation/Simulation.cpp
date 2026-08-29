@@ -130,7 +130,17 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
     if (days < 0) {
         City* snapshot = findSnapshot(targetDate);
         if (snapshot == nullptr) {
-            throw std::invalid_argument("No snapshot found for that date");
+            std::string msg = "No snapshot found for " + targetDate.toString() + ".";
+            if (snapshots.empty()) {
+                msg += " No snapshots available (use 'step' forward first).";
+            }
+            else {
+                msg += " Available dates:";
+                for (int i = 0; i < (int)snapshots.size(); i++) {
+                    msg += " " + snapshots[i]->getCurrentDate().toString();
+                }
+            }
+            throw std::invalid_argument(msg);
         }
         delete city;
         city = new City(*snapshot);

@@ -85,6 +85,14 @@ void InfoCommands::handleInfo(Simulation& simulation, int row, int col, const st
     }
 
     Paginator paginator;
-    paginator.addLine(UI::formatResidentFull(*resident));
+    paginator.addLine("Name:       " + resident->getName());
+    paginator.addLine("Profession: " + resident->getProfession()->getName());
+    paginator.addLine("Happiness:  " + std::to_string(resident->getHappiness()));
+    paginator.addLine("Money:      " + std::to_string(resident->getMoney()));
+    paginator.addLine("Life:       " + std::to_string(resident->getLife()));
+    paginator.addLine("History:");
+    for (int i = 0; i < (int)resident->getHistory().size(); i++) {
+        paginator.addLine("  " + resident->getHistory()[i].toString());
+    }
     paginator.display();
 }

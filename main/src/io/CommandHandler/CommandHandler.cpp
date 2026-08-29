@@ -1,6 +1,7 @@
 #include "CommandHandler.hpp"
 #include "../../utils/StringUtils/StringUtils.hpp"
 #include <iostream>
+#include <fstream>
 
 CommandHandler::CommandHandler(Simulation& simulation) : simulation(simulation) {
 }
@@ -76,6 +77,18 @@ void CommandHandler::run() {
     UI::printHelp();
     std::cout << std::endl;
 
+    std::ifstream autoFile("data/autosave.dat", std::ios::binary);
+    if (autoFile.good()) {
+        autoFile.close();
+        try {
+            simulation.load("autosave");
+            UI::printSuccess("Auto-loaded previous simulation.");
+            UI::printCurrentDate(simulation.getCity()->getCurrentDate().toString());
+        }
+        catch (...) {
+        }
+    }
+
     std::string line;
     while (true) {
         UI::printPrompt();
@@ -95,6 +108,14 @@ void CommandHandler::run() {
                 }
             }
             break;
+        }
+    }
+
+    if (simulation.hasCity()) {
+        try {
+            simulation.save("autosave");
+        }
+        catch (...) {
         }
     }
 }

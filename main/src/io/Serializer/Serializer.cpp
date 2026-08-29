@@ -138,9 +138,16 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         throw std::runtime_error("Could not open file: " + filename);
     }
 
+    auto validateLen = [&](int len, const std::string& what) {
+        if (len < 0 || len > 10000) {
+            throw std::runtime_error("Corrupted file: invalid " + what + " length in " + filename);
+        }
+    };
+
     // read city name
     int cityNameLen;
     file.read((char*)&cityNameLen, sizeof(int));
+    validateLen(cityNameLen, "city name");
     std::string name(cityNameLen, '\0');
     file.read(&name[0], cityNameLen);
 
@@ -174,6 +181,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                 int buildingTypeLen;
                 file.read((char*)&buildingTypeLen, sizeof(int));
                 if (buildingTypeLen == -1) continue;
+                validateLen(buildingTypeLen, "building type");
 
                 std::string buildingType(buildingTypeLen, '\0');
                 file.read(&buildingType[0], buildingTypeLen);
@@ -188,17 +196,22 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
 
                 int residentCount;
                 file.read((char*)&residentCount, sizeof(int));
+                if (residentCount < 0 || residentCount > 10000) {
+                    throw std::runtime_error("Corrupted file: invalid resident count in " + filename);
+                }
 
                 for (int k = 0; k < residentCount; k++) {
                     // read name
                     int residentNameLen;
                     file.read((char*)&residentNameLen, sizeof(int));
+                    validateLen(residentNameLen, "resident name");
                     std::string residentName(residentNameLen, '\0');
                     file.read(&residentName[0], residentNameLen);
 
                     // read profession
                     int professionNameLen;
                     file.read((char*)&professionNameLen, sizeof(int));
+                    validateLen(professionNameLen, "profession name");
                     std::string professionName(professionNameLen, '\0');
                     file.read(&professionName[0], professionNameLen);
 
@@ -217,10 +230,17 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                     file.read((char*)&life, sizeof(int));
 
                     Resident* resident = new Resident(residentName, profession, happiness, money, life);
+                    resident->setHappiness(happiness);
+                    resident->setMoney(money);
+                    resident->setLife(life);
 
                     // read history
                     int historySize;
                     file.read((char*)&historySize, sizeof(int));
+                    if (historySize < 0 || historySize > 100000) {
+                        delete resident;
+                        throw std::runtime_error("Corrupted file: invalid history size in " + filename);
+                    }
                     for (int h = 0; h < historySize; h++) {
                         int entryDay, entryMonth, entryYear;
                         file.read((char*)&entryDay, sizeof(int));
@@ -228,6 +248,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                         file.read((char*)&entryYear, sizeof(int));
                         int descriptionLen;
                         file.read((char*)&descriptionLen, sizeof(int));
+                        validateLen(descriptionLen, "history description");
                         std::string description(descriptionLen, '\0');
                         file.read(&description[0], descriptionLen);
                         resident->addHistoryEntry(Date(entryDay, entryMonth, entryYear), description);
@@ -241,7 +262,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
         // read city history (optional — old save files may not have it)
         int cityHistorySize = 0;
         file.read((char*)&cityHistorySize, sizeof(int));
-        if (file.good() && cityHistorySize > 0) {
+        if (file.good() && cityHistorySize > 0 && cityHistorySize < 100000) {
             for (int h = 0; h < cityHistorySize; h++) {
                 int entryDay, entryMonth, entryYear;
                 file.read((char*)&entryDay, sizeof(int));
@@ -249,6 +270,7 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
                 file.read((char*)&entryYear, sizeof(int));
                 int descriptionLen;
                 file.read((char*)&descriptionLen, sizeof(int));
+                if (descriptionLen < 0 || descriptionLen > 10000) break;
                 std::string description(descriptionLen, '\0');
                 file.read(&description[0], descriptionLen);
                 if (!file.good()) break;
