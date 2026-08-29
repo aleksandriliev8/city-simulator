@@ -1,5 +1,6 @@
 # Visual Studio
 .vs/
+enc_temp_folder/
 
 # Per-user
 *.user
@@ -24,6 +25,8 @@ x86/
 
 # Runtime generated data
 data/*
+main/data/*
 
-# Keep the history in the repo
+# Keep the folder structure in the repo
 !data/.gitkeep
+!main/data/.gitkeep
