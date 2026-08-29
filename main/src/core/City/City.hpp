@@ -39,4 +39,5 @@ public:
 
     void advanceDate(int days);
     void addHistoryEntry(const std::string& description);
+    void addHistoryEntry(const Date& date, const std::string& description);
 };

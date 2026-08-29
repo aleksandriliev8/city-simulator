@@ -57,7 +57,11 @@ void StatCommands::handleStat(Simulation& simulation, const std::string& option)
             UI::printError("No residents in simulation.");
             return;
         }
-        paginator.addLine("Average: " + std::to_string(total / count));
+        double avg = (double)total / count;
+        std::string avgStr = std::to_string(avg);
+        size_t dot = avgStr.find('.');
+        if (dot != std::string::npos && dot + 3 < avgStr.size()) avgStr = avgStr.substr(0, dot + 3);
+        paginator.addLine("Average: " + avgStr);
         paginator.addLine("Min:     " + std::to_string(min));
         paginator.addLine("Max:     " + std::to_string(max));
     }

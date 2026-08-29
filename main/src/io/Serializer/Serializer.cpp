@@ -15,7 +15,7 @@
 
 void Serializer::save(const Simulation& simulation, const std::string& filename) {
     std::ofstream file("data/" + filename + ".dat", std::ios::binary);
-    if (!file) {
+    if (!file.is_open()) {
         throw std::runtime_error("Could not open file for writing: " + filename);
     }
 
@@ -110,6 +110,23 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
         }
     }
 
+    // write city history
+    int cityHistorySize = (int)city->getHistory().size();
+    file.write((char*)&cityHistorySize, sizeof(int));
+    for (int h = 0; h < cityHistorySize; h++) {
+        const HistoryEntry& entry = city->getHistory()[h];
+        int entryDay = entry.getDate().getDay();
+        int entryMonth = entry.getDate().getMonth();
+        int entryYear = entry.getDate().getYear();
+        file.write((char*)&entryDay, sizeof(int));
+        file.write((char*)&entryMonth, sizeof(int));
+        file.write((char*)&entryYear, sizeof(int));
+        std::string desc = entry.getDescription();
+        int descLen = (int)desc.size();
+        file.write((char*)&descLen, sizeof(int));
+        file.write(desc.c_str(), descLen);
+    }
+
     if (!file) {
         throw std::runtime_error("Error writing to file: " + filename);
     }
@@ -117,7 +134,7 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
 
 void Serializer::load(Simulation& simulation, const std::string& filename) {
     std::ifstream file("data/" + filename + ".dat", std::ios::binary);
-    if (!file) {
+    if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + filename);
     }
 
@@ -151,8 +168,6 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
     City* city = new City(name, rows, cols, Date(startDay, startMonth, startYear), Date(curDay, curMonth, curYear));
 
     try {
-        simulation.setCity(city);
-
         // read matrix
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
@@ -223,14 +238,29 @@ void Serializer::load(Simulation& simulation, const std::string& filename) {
             }
         }
 
-        if (!file) {
-            throw std::runtime_error("Error reading file: " + filename);
+        // read city history (optional — old save files may not have it)
+        int cityHistorySize = 0;
+        file.read((char*)&cityHistorySize, sizeof(int));
+        if (file.good() && cityHistorySize > 0) {
+            for (int h = 0; h < cityHistorySize; h++) {
+                int entryDay, entryMonth, entryYear;
+                file.read((char*)&entryDay, sizeof(int));
+                file.read((char*)&entryMonth, sizeof(int));
+                file.read((char*)&entryYear, sizeof(int));
+                int descLen;
+                file.read((char*)&descLen, sizeof(int));
+                std::string desc(descLen, '\0');
+                file.read(&desc[0], descLen);
+                if (!file.good()) break;
+                city->addHistoryEntry(Date(entryDay, entryMonth, entryYear), desc);
+            }
         }
+        file.clear();
 
+        simulation.setCity(city);
     }
     catch (...) {
         delete city;
-        simulation.setCity(nullptr);
         throw;
     }
 }

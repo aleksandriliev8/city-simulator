@@ -2,7 +2,7 @@
 #include <stdexcept>
 
 City::City(const std::string& name, int rows, int cols)
-    : name(name), rows(rows), history(), cols(cols), startDate(), currentDate() {
+    : name(name), history(), startDate(), currentDate(), rows(rows), cols(cols) {
     allocateMatrix();
 }
 
@@ -112,4 +112,8 @@ void City::advanceDate(int days) {
 
 void City::addHistoryEntry(const std::string& description) {
     history.push_back(HistoryEntry(currentDate, description));
+}
+
+void City::addHistoryEntry(const Date& date, const std::string& description) {
+    history.push_back(HistoryEntry(date, description));
 }
