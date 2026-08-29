@@ -49,6 +49,11 @@ void Simulation::generate(int rows, int cols) {
     std::string name = loadRandomCityName();
 
     delete city;
+    for (int i = 0; i < (int)snapshots.size(); i++) {
+        delete snapshots[i];
+    }
+    snapshots.clear();
+
     city = new City(name, rows, cols);
 
     for (int i = 0; i < rows; i++) {
@@ -74,6 +79,10 @@ void Simulation::generate(int rows, int cols) {
                         delete profession;
                         profession = new Unemployed();
                     }
+                    if (profession->getName() != "Student" && building->canHouseStudent()) {
+                        delete profession;
+                        profession = new Student();
+                    }
 
                     Resident* resident = new Resident(
                         "Resident_" + std::to_string(i) + "_" + std::to_string(j) + "_" + std::to_string(r),
@@ -90,6 +99,7 @@ void Simulation::generate(int rows, int cols) {
         }
     }
 
+    city->addHistoryEntry("City '" + city->getName() + "' generated (" + std::to_string(rows) + "x" + std::to_string(cols) + ")");
     hasUnsavedChanges = true;
 }
 
@@ -155,6 +165,7 @@ void Simulation::step(int days, int& zeroHappiness, int& zeroLife, int& zeroMone
                     }
 
                     for (int r = 0; r < (int)toRemove.size(); r++) {
+                        city->addHistoryEntry("Resident '" + toRemove[r] + "' died at (" + std::to_string(i) + ", " + std::to_string(j) + ")");
                         building->removeResident(toRemove[r]);
                     }
                 }
@@ -198,6 +209,10 @@ bool Simulation::addResident(int row, int col, const std::string& name, const st
         delete profession;
         return false;
     }
+    if (job != "Student" && building->canHouseStudent()) {
+        delete profession;
+        return false;
+    }
 
     Resident* resident = new Resident(name, profession, happiness, money, life);
     if (!building->addResident(resident)) {
@@ -205,6 +220,7 @@ bool Simulation::addResident(int row, int col, const std::string& name, const st
         return false;
     }
 
+    city->addHistoryEntry("Resident '" + name + "' added at (" + std::to_string(row) + ", " + std::to_string(col) + ")");
     hasUnsavedChanges = true;
     return true;
 }
@@ -216,8 +232,11 @@ bool Simulation::removeResident(int row, int col, const std::string& name) {
     Building* building = city->getBuilding(row, col);
     if (building == nullptr) return false;
 
+    if (!building->removeResident(name)) return false;
+
+    city->addHistoryEntry("Resident '" + name + "' removed from (" + std::to_string(row) + ", " + std::to_string(col) + ")");
     hasUnsavedChanges = true;
-    return building->removeResident(name);
+    return true;
 }
 
 void Simulation::save(const std::string& filename) {
@@ -226,6 +245,11 @@ void Simulation::save(const std::string& filename) {
 }
 
 void Simulation::load(const std::string& filename) {
+    for (int i = 0; i < (int)snapshots.size(); i++) {
+        delete snapshots[i];
+    }
+    snapshots.clear();
+
     Serializer::load(*this, filename);
     hasUnsavedChanges = false;
 }

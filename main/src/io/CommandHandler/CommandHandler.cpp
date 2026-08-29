@@ -13,24 +13,36 @@ bool CommandHandler::parseAndExecute(const std::string& line) {
 
     if (command == "generate") {
         if (t.size() != 3) { UI::printError("Usage: generate <n> <m>"); return true; }
+        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Dimensions must be integers."); return true; }
         SimCommands::handleGenerate(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]));
     }
     else if (command == "add") {
         if (t.size() != 8) { UI::printError("Usage: add <n> <m> <name> <job> <happiness> <money> <life>"); return true; }
+        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2]) || !StringUtils::isInt(t[5]) || !StringUtils::isInt(t[6]) || !StringUtils::isInt(t[7])) {
+            UI::printError("Coordinates and characteristics must be integers."); return true;
+        }
         SimCommands::handleAdd(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3], t[4], StringUtils::toInt(t[5]), StringUtils::toInt(t[6]), StringUtils::toInt(t[7]));
     }
     else if (command == "remove") {
         if (t.size() != 4) { UI::printError("Usage: remove <n> <m> <name>"); return true; }
+        if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
         SimCommands::handleRemove(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3]);
     }
     else if (command == "step") {
+        if (t.size() > 1 && !StringUtils::isInt(t[1])) { UI::printError("Step count must be an integer."); return true; }
         int days = t.size() > 1 ? StringUtils::toInt(t[1]) : 1;
         SimCommands::handleStep(simulation, days);
     }
     else if (command == "info") {
         if (t.size() == 1)      InfoCommands::handleInfo(simulation);
-        else if (t.size() == 3) InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]));
-        else if (t.size() == 4) InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3]);
+        else if (t.size() == 3) {
+            if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
+            InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]));
+        }
+        else if (t.size() == 4) {
+            if (!StringUtils::isInt(t[1]) || !StringUtils::isInt(t[2])) { UI::printError("Coordinates must be integers."); return true; }
+            InfoCommands::handleInfo(simulation, StringUtils::toInt(t[1]), StringUtils::toInt(t[2]), t[3]);
+        }
         else UI::printError("Usage: info | info <x> <y> | info <x> <y> <name>");
     }
     else if (command == "stat") {
