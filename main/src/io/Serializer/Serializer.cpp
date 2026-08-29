@@ -13,8 +13,31 @@
 #include <fstream>
 #include <stdexcept>
 
+// Resolves the data directory path regardless of working directory
+static std::string resolveDataPath(const std::string& filename) {
+    std::string paths[] = {
+        "data/" + filename,
+        "../main/data/" + filename,
+        "main/data/" + filename
+    };
+    for (int i = 0; i < 3; i++) {
+        std::ifstream test(paths[i], std::ios::binary);
+        if (test.good()) return paths[i];
+    }
+    return paths[0];
+}
+
+static std::string resolveDataDir() {
+    std::string dirs[] = { "data/", "../main/data/", "main/data/" };
+    for (int i = 0; i < 3; i++) {
+        std::ifstream test(dirs[i] + ".gitkeep");
+        if (test.good()) return dirs[i];
+    }
+    return dirs[0];
+}
+
 void Serializer::save(const Simulation& simulation, const std::string& filename) {
-    std::ofstream file("data/" + filename + ".dat", std::ios::binary);
+    std::ofstream file(resolveDataDir() + filename + ".dat", std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file for writing: " + filename);
     }
@@ -133,7 +156,8 @@ void Serializer::save(const Simulation& simulation, const std::string& filename)
 }
 
 void Serializer::load(Simulation& simulation, const std::string& filename) {
-    std::ifstream file("data/" + filename + ".dat", std::ios::binary);
+    std::string path = resolveDataPath(filename + ".dat");
+    std::ifstream file(path, std::ios::binary);
     if (!file.is_open()) {
         throw std::runtime_error("Could not open file: " + filename);
     }
